@@ -56,12 +56,6 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
 
 
 def proc_nrt():
-    _log = logging.getLogger(__name__)
-    logging.basicConfig(filename='/data/log/pyglider.log',
-                        filemode='a',
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
     try:
         to_process = pd.read_csv('/home/pipeline/to_process.csv', dtype=int)
     except FileNotFoundError:
@@ -93,4 +87,10 @@ def proc_nrt():
 
 
 if __name__ == '__main__':
+    _log = logging.getLogger(__name__)
+    logging.basicConfig(filename='/data/log/pyglider.log',
+                        filemode='a',
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        level=logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
     proc_nrt()
