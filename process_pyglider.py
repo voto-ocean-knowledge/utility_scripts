@@ -14,7 +14,12 @@ os.chdir(pyglider_dir)
 import pyglider.seaexplorer as seaexplorer
 import pyglider.ncprocess as ncprocess
 
-logging.basicConfig(level='INFO')
+_log = logging.getLogger(__name__)
+logging.basicConfig(filename='/data/log/pyglider_nrt.log',
+                    filemode='a',
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    level=logging.INFO,
+                    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def safe_delete(directories):
@@ -87,10 +92,5 @@ def proc_nrt():
 
 
 if __name__ == '__main__':
-    _log = logging.getLogger(__name__)
-    logging.basicConfig(filename='/data/log/pyglider.log',
-                        filemode='a',
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
+
     proc_nrt()
