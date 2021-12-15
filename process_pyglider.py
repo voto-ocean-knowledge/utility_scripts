@@ -52,10 +52,10 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         seaexplorer.raw_to_rawnc(rawdir, rawncdir, deploymentyaml, incremental=True)
     if steps[2]:
         # merge individual netcdf files into single netcdf files *.gli*.nc and *.pld1*.nc
-        seaexplorer.merge_rawnc(rawncdir, rawncdir, deploymentyaml, kind=args.kind)
+        seaexplorer.merge_rawnc(rawncdir, rawncdir, deploymentyaml, kind=kind)
     if steps[3]:
         # Make level-0 timeseries netcdf file from the raw files...
-        outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=args.kind)
+        outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=kind)
         ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
         ncprocess.extract_L0timeseries_profiles(outname, profiledir, deploymentyaml)
 
