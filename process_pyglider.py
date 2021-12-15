@@ -61,6 +61,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
 
 
 def proc_nrt():
+    _log.info("Start nrt processing")
     try:
         to_process = pd.read_csv('/home/pipeline/to_process.csv', dtype=int)
     except FileNotFoundError:
@@ -90,6 +91,7 @@ def proc_nrt():
             continue
         _log.info(f"Processing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
+    _log.info("Finished nrt processing")
 
 
 if __name__ == '__main__':
