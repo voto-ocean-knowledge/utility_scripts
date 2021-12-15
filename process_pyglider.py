@@ -90,3 +90,7 @@ def proc_nrt():
             continue
         _log.info(f"Processing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
+
+
+if __name__ == '__main__':
+    proc_nrt()
