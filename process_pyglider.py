@@ -71,12 +71,13 @@ def proc_nrt():
         mission = str(row.mission)
         input_dir = f"/data/data_raw/nrt/SEA{glider.zfill(3)}/{mission.zfill(6)}/C-Csv/"
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
+        gridfiles_dir = f"{output_dir}gridfiles/"
         proc_steps = (0, 1, 1, 1)
         try:
-            nc_file = list(pathlib.Path(output_dir).glob('*.nc'))[0]
+            nc_file = list(pathlib.Path(gridfiles_dir).glob('*.nc'))[0]
             nc_time = nc_file.lstat().st_mtime
         except IndexError:
-            _log.warning(f"no nc file found int {output_dir}. Reprocessing all data")
+            _log.warning(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
             nc_time = 0
             proc_steps = (1, 1, 1, 1)
         infile_time = 1
