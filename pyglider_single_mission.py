@@ -43,7 +43,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
-    if args.batcshize:
+    if args.batchsize:
         batch_size = args.batchsize
     else:
         batch_size = 500
@@ -125,4 +125,4 @@ if __name__ == '__main__':
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     mission_grid.load()
     mission_grid.to_netcdf(f"{griddir}mission_grid.nc")
-    _log.info('Recombiation complete')
+    _log.info('Recombination complete')
