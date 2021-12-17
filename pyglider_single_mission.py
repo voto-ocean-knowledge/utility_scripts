@@ -123,10 +123,9 @@ def batched_process(args):
     l0tsdir = output_dir + 'timeseries/'
     profiledir = output_dir + 'profiles/'
     griddir = output_dir + 'gridfiles/'
-    if not pathlib.Path(rawncdir).exists():
-        pathlib.Path(rawncdir).mkdir(parents=True)
-    if not pathlib.Path(profiledir).exists():
-        pathlib.Path(profiledir).mkdir(parents=True)
+    for dir in [rawncdir, l0tsdir, profiledir, griddir]:
+        if not pathlib.Path(dir).exists():
+            pathlib.Path(dir).mkdir(parents=True)
     _log.info(f"Copying rawnc and l0 profiles files")
     for i in range(num_batches):
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
