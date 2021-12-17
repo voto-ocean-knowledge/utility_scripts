@@ -139,8 +139,8 @@ def batched_process(args):
     sub_gridfiles = []
     for i in range(num_batches):
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
-        sub_timeseries.append(glob.glob(f"{out_sub_dir}timeseries/*.nc"))
-        sub_gridfiles.append(glob.glob(f"{out_sub_dir}gridfiles/*.nc"))
+        sub_timeseries.append(glob.glob(f"{out_sub_dir}timeseries/*.nc")[0])
+        sub_gridfiles.append(glob.glob(f"{out_sub_dir}gridfiles/*.nc")[0])
 
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     mission_timeseries.load()
