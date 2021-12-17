@@ -53,13 +53,13 @@ if __name__ == '__main__':
         steps = [1, 1, 1, 1]
 
     # Process in batches of dives (default 500) to avoid maxxing out memory
-    input_dir = f"/data/data_raw/complete_mission/SEA{args.glider}/{args.mission}/"
+    input_dir = f"/data/data_raw/complete_mission/SEA{args.glider}/M{args.mission}/"
     if not input_dir:
         raise ValueError(f"Input dir {input_dir} not found")
     output_dir = f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}/"
 
     in_files_gli = natural_sort(glob.glob(f"{input_dir}*gli*"))
-    in_files_pld = natural_sort(glob.glob(f"{input_dir}*pld*{args.kind}"))
+    in_files_pld = natural_sort(glob.glob(f"{input_dir}*pld*{args.kind}*"))
 
     if len(in_files_gli) == 0 or len(in_files_pld) == 0:
         raise ValueError(f"input dir {input_dir} does not contain gli and/or pld files")
