@@ -29,6 +29,39 @@ def natural_sort(unsorted_list):
     return sorted(unsorted_list, key=alphanum_key)
 
 
+def match_input_files(gli_infiles, pld_infiles):
+    gli_nums = []
+    for fname in gli_infiles:
+        parts = fname.split('.')
+        try:
+            gli_nums.append(int(parts[-1]))
+        except ValueError:
+            try:
+                gli_nums.append(int(parts[-2]))
+            except ValueError:
+                raise ValueError("Unexpected gli file filename found in input. Aborting")
+    pld_nums = []
+    for fname in pld_infiles:
+        parts = fname.split('.')
+        try:
+            pld_nums.append(int(parts[-1]))
+        except ValueError:
+            try:
+                pld_nums.append(int(parts[-2]))
+            except ValueError:
+                raise ValueError("Unexpected pld file filename found in input. Aborting")
+    good_cycles = set(pld_nums) & set(gli_nums)
+    good_gli_files = []
+    good_pld_files = []
+    for i, num in enumerate(gli_nums):
+        if num in good_cycles:
+            good_gli_files.append(gli_infiles[i])
+    for i, num in enumerate(pld_nums):
+        if num in good_cycles:
+            good_pld_files.append(pld_infiles[i])
+    return good_gli_files, good_pld_files
+
+
 def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
@@ -47,6 +80,7 @@ def batched_process(args):
 
     in_files_gli = natural_sort(glob.glob(f"{input_dir}*gli*"))
     in_files_pld = natural_sort(glob.glob(f"{input_dir}*pld*{args.kind}*"))
+    in_files_gli, in_files_pld = match_input_files(in_files_gli, in_files_pld)
 
     if len(in_files_gli) == 0 or len(in_files_pld) == 0:
         raise ValueError(f"input dir {input_dir} does not contain gli and/or pld files")
