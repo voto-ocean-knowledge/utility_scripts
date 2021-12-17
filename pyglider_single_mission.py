@@ -70,6 +70,8 @@ def batched_process(args):
         # Copy input into a sub directory
         for filename in in_files_gli_sub:
             shutil.copy(filename, in_sub_dir)
+        for filename in in_files_pld_sub:
+            shutil.copy(filename, in_sub_dir)
         # create output directory
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
         if not pathlib.Path(out_sub_dir).exists():
@@ -108,7 +110,7 @@ def batched_process(args):
 
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     mission_timeseries.load()
-    mission_timeseries.to_netcdf(f"{profiledir}mission_timeseries.nc")
+    mission_timeseries.to_netcdf(f"{l0tsdir}mission_timeseries.nc")
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     mission_grid.load()
