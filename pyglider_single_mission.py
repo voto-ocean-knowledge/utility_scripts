@@ -29,20 +29,7 @@ def natural_sort(unsorted_list):
     return sorted(unsorted_list, key=alphanum_key)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='process SX files with pyglider')
-    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
-    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
-    parser.add_argument('kind', type=str, help='Kind of input, must be raw or sub')
-    parser.add_argument('--steps', type=str, help='List of steps to perform. 1 performs step, 0 skips it. e.g. "0, 0, '
-                                                  '1, 1" will skip delete old data and convert rawnc steps. '
-                                                  'Will perform the merge_rawnc, create l0 products')
-    parser.add_argument('--batchsize', type=int, help='Number of dives to process per batch. Defaults to 500. Reduce '
-                                                      'this number if processing is maxxing out memory. Processed '
-                                                      'datasets are recombined at the end')
-    args = parser.parse_args()
-    if args.kind not in ['raw', 'sub']:
-        raise ValueError('kind must be raw or sub')
+def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
@@ -69,7 +56,8 @@ if __name__ == '__main__':
     # If less than one batch worth, process directly
     if num_batches == 1:
         proc_pyglider_l0(args.glider, args.mission, args.kind, input_dir, output_dir, steps=steps)
-        pass
+        _log.info(f"Finished processing glider {args.glider} mission {args.mission} in {num_batches} batch")
+        return
     # Process input files in batches
     for i in range(num_batches):
         start = i * batch_size
@@ -126,3 +114,20 @@ if __name__ == '__main__':
     mission_grid.load()
     mission_grid.to_netcdf(f"{griddir}mission_grid.nc")
     _log.info('Recombination complete')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='process SX files with pyglider')
+    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
+    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
+    parser.add_argument('kind', type=str, help='Kind of input, must be raw or sub')
+    parser.add_argument('--steps', type=str, help='List of steps to perform. 1 performs step, 0 skips it. e.g. "0, 0, '
+                                                  '1, 1" will skip delete old data and convert rawnc steps. '
+                                                  'Will perform the merge_rawnc, create l0 products')
+    parser.add_argument('--batchsize', type=int, help='Number of dives to process per batch. Defaults to 500. Reduce '
+                                                      'this number if processing is maxxing out memory. Processed '
+                                                      'datasets are recombined at the end')
+    args = parser.parse_args()
+    if args.kind not in ['raw', 'sub']:
+        raise ValueError('kind must be raw or sub')
+    batched_process(args)
