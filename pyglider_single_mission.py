@@ -62,6 +62,27 @@ def match_input_files(gli_infiles, pld_infiles):
     return good_gli_files, good_pld_files
 
 
+def bump_up(profile_nums, chunk_size):
+    for i, num in enumerate(profile_nums[1:]):
+        if num < profile_nums[i]:
+            profile_nums[i + 1] += chunk_size
+    return profile_nums
+
+
+def fix_profile_number(ds, var_name='profile'):
+    profile_nums_raw = ds[var_name].values
+    profile_nums = profile_nums_raw[np.logical_and(profile_nums_raw != 0, ~np.isnan(profile_nums_raw))]
+    step = np.max(profile_nums)
+    profile_nums_pre = profile_nums - 1
+    while (profile_nums != profile_nums_pre).any():
+        print('step')
+        profile_nums_pre = profile_nums.copy()
+        profile_nums = bump_up(profile_nums, step)
+    profile_nums_raw[np.logical_and(profile_nums_raw != 0, ~np.isnan(profile_nums_raw))] = profile_nums
+    ds[var_name].values = profile_nums_raw
+    return ds
+
+
 def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
@@ -147,10 +168,12 @@ def batched_process(args):
 
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     mission_timeseries.load()
+    mission_timeseries = fix_profile_number(mission_timeseries, var_name='profile_index')
     mission_timeseries.to_netcdf(f"{l0tsdir}mission_timeseries.nc")
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     mission_grid.load()
+    mission_grid = fix_profile_number(mission_grid)
     mission_grid.to_netcdf(f"{griddir}mission_grid.nc")
     _log.info('Recombination complete')
 
