@@ -87,7 +87,7 @@ def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
-        batch_size = 500
+        batch_size = 100
     if args.steps:
         steps = [int(item) for item in args.steps.split(',')]
     else:
@@ -147,17 +147,17 @@ def batched_process(args):
     for dir in [rawncdir, l0tsdir, profiledir, griddir]:
         if not pathlib.Path(dir).exists():
             pathlib.Path(dir).mkdir(parents=True)
-    _log.info(f"Copying rawnc and l0 profiles files")
+    _log.info(f"Moving rawnc and l0 profiles files")
     for i in range(num_batches):
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
         sub_rawncdir = out_sub_dir + 'rawnc/'
         sub_profiledir = out_sub_dir + 'profiles/'
         in_raw_nc = glob.glob(f"{sub_rawncdir}*.nc")
         for filename in in_raw_nc:
-            shutil.copy(filename, rawncdir)
+            shutil.move(filename, rawncdir)
         in_profile = glob.glob(f"{sub_profiledir}*.nc")
         for filename in in_profile:
-            shutil.copy(filename, profiledir)
+            shutil.move(filename, profiledir)
     _log.info('Recombining timeseries and grid ncs')
     sub_timeseries = []
     sub_gridfiles = []
