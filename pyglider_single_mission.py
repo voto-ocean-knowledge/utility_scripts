@@ -190,7 +190,7 @@ if __name__ == '__main__':
         raise ValueError('kind must be raw or sub')
     logf = f'/data/log/complete_mission/SEA{str(args.glider)}_M{str(args.mission)}.log'
     logging.basicConfig(filename=logf,
-                        filemode='a',
+                        filemode='w',
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
