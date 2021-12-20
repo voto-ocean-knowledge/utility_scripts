@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import pathlib
@@ -16,11 +17,6 @@ os.chdir(script_dir)
 from process_pyglider import proc_pyglider_l0
 
 _log = logging.getLogger(__name__)
-logging.basicConfig(filename='/data/log/pyglider_complete_mission.log',
-                    filemode='a',
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO,
-                    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def natural_sort(unsorted_list):
@@ -192,4 +188,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
+    logf = f'/data/log/complete_mission/SEA{str(args.glider)}_M{str(args.mission)}.log'
+    logging.basicConfig(filename=logf,
+                        filemode='a',
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        level=logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
     batched_process(args)
