@@ -10,7 +10,6 @@ import shutil
 import re
 import xarray as xr
 
-
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
@@ -131,7 +130,7 @@ def batched_process(args):
         _log.info(f"Started processing glider {args.glider} mission {args.mission} batch {i}")
         proc_pyglider_l0(args.glider, args.mission, args.kind, in_sub_dir, out_sub_dir, steps=steps)
         _log.info(f"Finished processing glider {args.glider} mission {args.mission} batch {i}")
-    
+
     # Recombine outputs
     _log.info(f"Recombining glider {args.glider} mission {args.mission} from {num_batches} batches")
     if not pathlib.Path(output_dir).exists():
@@ -148,8 +147,11 @@ def batched_process(args):
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
         sub_rawncdir = out_sub_dir + 'rawnc/'
         sub_profiledir = out_sub_dir + 'profiles/'
-        in_raw_nc = glob.glob(f"{sub_rawncdir}*.nc")
+        in_raw_nc = glob.glob(f"{sub_rawncdir}*.pld*.nc")
         for filename in in_raw_nc:
+            shutil.move(filename, rawncdir)
+        in_raw_gli = glob.glob(f"{sub_rawncdir}*.gli*.nc")
+        for filename in in_raw_gli:
             shutil.move(filename, rawncdir)
         in_profile = glob.glob(f"{sub_profiledir}*.nc")
         for filename in in_profile:
@@ -159,8 +161,16 @@ def batched_process(args):
     sub_gridfiles = []
     for i in range(num_batches):
         out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
-        sub_timeseries.append(glob.glob(f"{out_sub_dir}timeseries/*.nc")[0])
-        sub_gridfiles.append(glob.glob(f"{out_sub_dir}gridfiles/*.nc")[0])
+        sub_times = glob.glob(f"{out_sub_dir}timeseries/*.nc")
+        if sub_times:
+            sub_timeseries.append(sub_times[0])
+        else:
+            _log.warning(f"No timeseries file in {out_sub_dir}")
+        sub_grid = glob.glob(f"{out_sub_dir}gridfiles/*.nc")
+        if sub_grid:
+            sub_gridfiles.append(sub_grid[0])
+        else:
+            _log.warning(f"No grid file in {out_sub_dir}")
 
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     mission_timeseries.load()
