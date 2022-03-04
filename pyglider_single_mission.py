@@ -109,9 +109,18 @@ def batched_process(args):
         _log.info(f"Finished processing glider {args.glider} mission {args.mission} in {num_batches} batch")
         return
     # Process input files in batches
-    for i in range(num_batches):
-        start = i * batch_size
-        end = (i + 1) * batch_size
+    num_files = len(in_files_gli)
+    starts = np.arange(0, num_files, batch_size)
+    ends = np.arange(batch_size, num_files + batch_size , batch_size)
+    # fix for if we have 2 or fewer files in final batch
+    if num_files - starts[-1] < 3:
+        starts = starts[:-1]
+        ends[-2] = ends[-1]
+        ends = ends[:-1]
+        _log.info(f"reduced to {len(starts)} batches")
+    for i in range(len(starts)):
+        start = starts[i]
+        end = ends[i]
         in_sub_dir = f"{input_dir[:-1]}_sub_{i}/"
         if not pathlib.Path(in_sub_dir).exists():
             pathlib.Path(in_sub_dir).mkdir(parents=True)
