@@ -4,7 +4,7 @@ import sys
 import os
 import glob
 import xarray as xr
-import numpy as np
+import shutil
 import logging
 
 
@@ -17,7 +17,32 @@ _log = logging.getLogger(__name__)
 
 def recombine(glider_num, mission_num):
     sub_dirs = list(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}").glob(f"M{mission_num}_sub*"))
-    _log.info(f"found {len(sub_dirs)} sub dirs to recombine")
+    _log.info(f"Recombining glider {args.glider} mission {args.mission} from {len(sub_dirs)} batches")
+    output_dir = f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}/M{mission_num}"
+    if not pathlib.Path(output_dir).exists():
+        pathlib.Path(output_dir).mkdir(parents=True)
+    rawncdir = output_dir + 'rawnc/'
+    l0tsdir = output_dir + 'timeseries/'
+    profiledir = output_dir + 'profiles/'
+    griddir = output_dir + 'gridfiles/'
+    for dir in [rawncdir, l0tsdir, profiledir, griddir]:
+        if not pathlib.Path(dir).exists():
+            pathlib.Path(dir).mkdir(parents=True)
+    _log.info(f"Moving rawnc and l0 profiles files")
+    for i in range(len(sub_dirs)):
+        out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
+        sub_rawncdir = out_sub_dir + 'rawnc/'
+        sub_profiledir = out_sub_dir + 'profiles/'
+        in_raw_nc = glob.glob(f"{sub_rawncdir}*.pld*.nc")
+        for filename in in_raw_nc:
+            shutil.move(filename, rawncdir)
+        in_raw_gli = glob.glob(f"{sub_rawncdir}*.gli*.nc")
+        for filename in in_raw_gli:
+            shutil.move(filename, rawncdir)
+        in_profile = glob.glob(f"{sub_profiledir}*.nc")
+        for filename in in_profile:
+            shutil.move(filename, profiledir)
+    _log.info("Looking for timeseries and gridfiles to recombine")
     sub_dirs.sort()
     sub_timeseries = []
     sub_gridfiles = []
@@ -37,7 +62,7 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     mission_timeseries = fix_profile_number(mission_timeseries, var_name='profile_index')
     _log.info('fixed timeseries profile numbers')
-    mission_timeseries.to_netcdf(f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}/M{mission_num}/timeseries/mission_timeseries.nc")
+    mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory
     mission_timeseries = None
@@ -46,8 +71,9 @@ def recombine(glider_num, mission_num):
     _log.info('loaded gridded')
     mission_grid = fix_profile_number(mission_grid)
     _log.info('fixed gridded profile numbers')
-    mission_grid.to_netcdf(f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}/M{mission_num}/gridfiles/mission_grid.nc")
+    mission_grid.to_netcdf(griddir + "mission_grid.nc")
     _log.info('wrote gridded')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='recombine SX files with pyglider')
