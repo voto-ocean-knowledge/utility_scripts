@@ -44,7 +44,6 @@ if __name__ == '__main__':
     parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
     parser.add_argument('--kind', type=str, help='Kind of input. Cana specify nrt or full. Defaults to both')
     args = parser.parse_args()
-    print(args)
     if args.kind not in ['raw', 'sub', None]:
         raise ValueError('kind must be raw or sub')
     logf = f'/data/log/update_meta/SEA{str(args.glider)}_M{str(args.mission)}.log'
