@@ -19,7 +19,7 @@ def get_last_line(file):
 
 
 if __name__ == '__main__':
-    print(f"{datetime.datetime.now} start check")
+    print(f"{datetime.datetime.now()} start check")
     errors = False
     for filename, string in files_dict.items():
         print(f"Check {filename}")
