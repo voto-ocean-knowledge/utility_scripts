@@ -5,6 +5,7 @@ To monitor a file, add the path to it and part of its expected last line to the 
 import datetime
 import subprocess
 files_dict = {"/data/log/rsync_nrt.log": "total size is",
+              "/data/log/rsync_metocc.log": "total size is",
               "/data/log/pyglider_nrt.log": "Finished nrt processing",
               "/data/log/nrt_plots.log": "End plot creation"}
 
