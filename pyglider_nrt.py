@@ -50,7 +50,7 @@ def proc_nrt():
         _log.info(f"Processing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
         _log.info("creaating metocc csv")
-        timeseries_dir = pathlib.Path("output_dir") / "timeseries"
+        timeseries_dir = pathlib.Path(output_dir) / "timeseries"
         timeseries_nc = list(timeseries_dir.glob("*.nc"))[0]
         metocc_base = create_csv(timeseries_nc)
         _log.info(f"created metocc files with base {metocc_base}")
