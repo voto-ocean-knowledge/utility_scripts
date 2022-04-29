@@ -47,7 +47,9 @@ def create_csv(ds_file):
 
     # Create standard filenames
     file_name_base = f"SEA{meta['glider_serial']}_M{meta['deployment_id']}"
-    dir_name = f"/data/data_l0_pyglider/metocc/{meta['sea_name']}"
+    sea_name = meta["sea_name"]
+    sea_name.replace(",", "_").replace(" ", "")
+    dir_name = f"/data/data_l0_pyglider/metocc/{sea_name}"
 
     # Make output directory and parents if they don't already exist
     output_dir = Path(dir_name)
