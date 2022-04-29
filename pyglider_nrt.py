@@ -8,6 +8,7 @@ script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
 from process_pyglider import proc_pyglider_l0
+from metocc import create_csv
 
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/pyglider_nrt.log',
@@ -48,6 +49,11 @@ def proc_nrt():
             continue
         _log.info(f"Processing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
+        _log.info("creaating metocc csv")
+        timeseries_dir = pathlib.Path("output_dir") / "timeseries"
+        timeseries_nc = list(timeseries_dir.glob("*.nc"))[0]
+        metocc_base = create_csv(timeseries_nc)
+        _log.info(f"created metocc files with base {metocc_base}")
     _log.info("Finished nrt processing")
 
 
