@@ -6,6 +6,7 @@ import datetime
 import subprocess
 files_dict = {"/data/log/rsync_nrt.log": "total size is",
               "/data/log/rsync_metocc.log": "total size is",
+              "/data/log/rsync_web.log": "total size is",
               "/data/log/pyglider_nrt.log": "Finished nrt processing",
               "/data/log/nrt_plots.log": "End plot creation"}
 
