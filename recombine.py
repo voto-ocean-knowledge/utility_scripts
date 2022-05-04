@@ -11,9 +11,10 @@ import logging
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
-from pyglider_single_mission import fix_profile_number
+from utilities import fix_profile_number
 
 _log = logging.getLogger(__name__)
+
 
 def recombine(glider_num, mission_num):
     sub_dirs = list(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}").glob(f"M{mission_num}_sub*"))
