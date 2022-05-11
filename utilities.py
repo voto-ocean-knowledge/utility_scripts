@@ -1,5 +1,7 @@
 import re
 import numpy as np
+import logging
+_log = logging.getLogger(__name__)
 
 
 def natural_sort(unsorted_list):
@@ -54,7 +56,7 @@ def fix_profile_number(ds, var_name='profile'):
     step = np.max(profile_nums)
     profile_nums_pre = profile_nums - 1
     while (profile_nums != profile_nums_pre).any():
-        print('step')
+        _log.info(f"step found. Bump up {step}")
         profile_nums_pre = profile_nums.copy()
         profile_nums = bump_up(profile_nums, step)
     profile_nums_raw[np.logical_and(profile_nums_raw != 0, ~np.isnan(profile_nums_raw))] = profile_nums

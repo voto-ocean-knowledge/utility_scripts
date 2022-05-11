@@ -74,6 +74,7 @@ def recombine(glider_num, mission_num):
     _log.info('fixed gridded profile numbers')
     mission_grid.to_netcdf(griddir + "mission_grid.nc")
     _log.info('wrote gridded')
+    _log.info("Recombination complete")
 
 
 if __name__ == '__main__':
