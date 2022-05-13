@@ -81,4 +81,3 @@ if __name__ == '__main__':
     else:
         sub_dir_in = 'complete_mission'
     update_ncs(args.glider, args.mission, sub_dir_in)
-    

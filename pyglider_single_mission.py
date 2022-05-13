@@ -14,6 +14,7 @@ os.chdir(script_dir)
 from utilities import natural_sort, match_input_files
 from process_pyglider import proc_pyglider_l0
 from recombine import recombine
+from geocode import update_ncs
 
 _log = logging.getLogger(__name__)
 
@@ -107,12 +108,15 @@ if __name__ == '__main__':
     recombine(args.glider, args.mission)
     # Call follow-up scripts
     if args.kind == "raw":
+        update_ncs(args.glider, args.mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences
         from complete_mission_plots import complete_plots
         complete_plots(args.glider, args.mission)
+        _log.info("Finished plot creation")
         sys.path.append(str(parent_dir / "voto-web/voto/bin"))
         # noinspection PyUnresolvedReferences
         from add_profiles import init_db, add_complete_profiles
         init_db()
         add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}"))
+        _log.info("Finished add to database")
