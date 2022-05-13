@@ -46,8 +46,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='add sub basin data to netcdf files')
     parser.add_argument('glider', type=int, help='glider number, e.g. 70')
     parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
+    parser.add_argument('--kind', type=str, help='Kind of input. Cana specify sub or raw')
     args = parser.parse_args()
-    if args.kind not in ['raw', 'sub', None]:
+    if args.kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
     logf = f'/data/log/update_meta/SEA{str(args.glider)}_M{str(args.mission)}.log'
     logging.basicConfig(filename=logf,
@@ -56,7 +57,7 @@ if __name__ == '__main__':
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     types = []
-    if args.kind in ['sub', None]:
+    if args.kind != 'sub':
         sub_dir = "nrt"
     else:
         sub_dir = 'complete_mission'
