@@ -7,7 +7,6 @@ import logging
 import glob
 import shutil
 
-
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
 sys.path.append(str(script_dir))
@@ -109,9 +108,11 @@ if __name__ == '__main__':
     # Call follow-up scripts
     if args.kind == "raw":
         sys.path.append(str(parent_dir / "quick-plots"))
+        # noinspection PyUnresolvedReferences
         from complete_mission_plots import complete_plots
         complete_plots(args.glider, args.mission)
         sys.path.append(str(parent_dir / "voto-web/voto/bin"))
+        # noinspection PyUnresolvedReferences
         from add_profiles import init_db, add_complete_profiles
         init_db()
-        add_complete_profiles(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")
+        add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}"))
