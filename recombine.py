@@ -58,7 +58,9 @@ def recombine(glider_num, mission_num):
             sub_gridfiles.append(sub_grid[0])
         else:
             _log.info(f"No grid file in {out_sub_dir}")
-
+    if not sub_timeseries or not sub_gridfiles:
+        _log.info("no files to recombine. Stop")
+        return
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     _log.info('loaded timeseries')
     mission_timeseries = fix_profile_number(mission_timeseries, var_name='profile_index')
