@@ -9,6 +9,7 @@ import shutil
 
 
 script_dir = pathlib.Path(__file__).parent.absolute()
+parent_dir = script_dir.parents[0]
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
 from utilities import natural_sort, match_input_files
@@ -105,3 +106,12 @@ if __name__ == '__main__':
                         datefmt='%Y-%m-%d %H:%M:%S')
     batched_process(args)
     recombine(args.glider, args.mission)
+    # Call follow-up scripts
+    if args.kind == "raw":
+        sys.path.append(str(parent_dir / "quick-plots"))
+        from complete_mission_plots import complete_plots
+        complete_plots(args.glider, args.mission)
+        sys.path.append(str(parent_dir / "voto-web/voto/bin"))
+        from add_profiles import init_db, add_complete_profiles
+        init_db()
+        add_complete_profiles(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")
