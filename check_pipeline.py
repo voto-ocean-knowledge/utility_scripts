@@ -8,6 +8,8 @@ files_dict = {"/data/log/rsync_nrt.log": "total size is",
               "/data/log/rsync_metocc.log": "total size is",
               "/data/log/rsync_web.log": "total size is",
               "/data/log/pyglider_nrt.log": "Finished nrt processing",
+              "/data/log/voto_add_sailbuoy.log": "Finished download of sailbuoy data",
+              "/data/log/voto_add_data.log": "Finished processing nrt sailbuoy data",
               "/data/log/nrt_plots.log": "End plot creation"}
 
 
