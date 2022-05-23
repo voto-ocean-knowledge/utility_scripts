@@ -56,7 +56,7 @@ def update_ncs(glider, mission, sub_dir):
     basin = get_seas(gridfile)
     _log.info(f"Basin: {basin}")
     for nc in nc_files_flat:
-        temp_nc = pathlib.Path("/tmp") / pathlib.Path(nc).name
+        temp_nc = pathlib.Path("/data/tmp") / pathlib.Path(nc).name
         nc_add_sea(nc, basin, temp_nc)
     _log.info(f"Updated all ncs in {root_dir}")
     _log.info("Success! added basin to all ncs")
