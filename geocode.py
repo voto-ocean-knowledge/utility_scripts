@@ -20,7 +20,7 @@ def get_seas(gridfile):
     df_glider = df_glider.set_crs(epsg=4326)
     df_glider = df_glider.to_crs(df_helcom.crs)
     polygons_contains = gp.sjoin(df_helcom, df_glider, predicate='contains')
-    basin_points = polygons_contains.level_2.values
+    basin_points = polygons_contains.Name.values
     basin_counts = Counter(basin_points).most_common()
     if not basin_counts:
         return ""
