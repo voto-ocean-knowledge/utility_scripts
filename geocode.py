@@ -9,8 +9,7 @@ from collections import Counter
 _log = logging.getLogger(__name__)
 from itertools import chain
 
-df_helcom = gp.read_file("/data/third_party/helcom_basins/HELCOM_subbasins_2022.shp")
-
+df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
 
 def get_seas(gridfile):
     ds = xr.open_dataset(gridfile)
@@ -20,7 +19,7 @@ def get_seas(gridfile):
     df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.lon, df_glider.lat))
     df_glider = df_glider.set_crs(epsg=4326)
     df_glider = df_glider.to_crs(df_helcom.crs)
-    polygons_contains = gp.sjoin(df_helcom, df_glider, op='contains')
+    polygons_contains = gp.sjoin(df_helcom, df_glider, predicate='contains')
     basin_points = polygons_contains.level_2.values
     basin_counts = Counter(basin_points).most_common()
     if not basin_counts:
