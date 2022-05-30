@@ -31,7 +31,7 @@ if __name__ == '__main__':
         if string not in final_line:
             errors = True
             msg = f"failed process: {filename} ends in {final_line}"
-            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg])
+            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg, "callum.rollo@voiceoftheocean.org"])
         if errors:
             print(f"{datetime.datetime.now()} failure detected in pipeline ")
             
