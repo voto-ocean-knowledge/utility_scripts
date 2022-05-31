@@ -9,7 +9,7 @@ files_dict = {"/data/log/rsync_nrt.log": "total size is",
               "/data/log/rsync_web.log": "total size is",
               "/data/log/pyglider_nrt.log": "Finished nrt processing",
               "/data/log/voto_add_sailbuoy.log": "Finished download of sailbuoy data",
-              "/data/log/voto_add_data.log": "Finished processing nrt sailbuoy data",
+              "/data/log/voto_add_data.log": "nrt mission add complete",
               "/data/log/nrt_plots.log": "End plot creation"}
 
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         if string not in final_line:
             errors = True
             msg = f"failed process: {filename} ends in {final_line}"
-            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg, "callum.rollo@voiceoftheocean.org"])
+            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg, "pipeline clogged", callum.rollo@voiceoftheocean.org"])
         if errors:
             print(f"{datetime.datetime.now()} failure detected in pipeline ")
             
