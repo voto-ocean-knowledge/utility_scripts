@@ -49,6 +49,10 @@ def create_csv(ds_file):
     file_name_base = f"SEA{meta['glider_serial']}_M{meta['deployment_id']}"
     sea_name = meta["sea_name"]
     sea_name_clean = sea_name.replace(",", "_").replace(" ", "")
+    if "basin" in meta.keys():
+        if len(meta["basin"]) > 5:
+            basin = meta["basin"]
+            sea_name_clean = basin.split(",")[0].replace(" ", "_")
     dir_name = f"/data/data_l0_pyglider/metocc/{sea_name_clean}"
 
     # Make output directory and parents if they don't already exist
