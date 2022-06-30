@@ -102,7 +102,7 @@ if __name__ == '__main__':
         batched_process(glider, mission)
         mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}")
         if mission_dir.exists():
-            mission_dir.unlink()
+            shutil.rmtree(mission_dir)
         recombine(glider, mission)
         # Call follow-up scripts
         update_ncs(glider, mission, 'complete_mission')
