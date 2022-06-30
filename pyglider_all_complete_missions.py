@@ -98,7 +98,11 @@ if __name__ == '__main__':
                 _log.warning(f"Could not process {mission_path}")
 
     for glider, mission in glidermissions:
+        _log.info(f"Reprocessing SEA{glider} M{mission}")
         batched_process(glider, mission)
+        mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}")
+        if mission_dir.exists():
+            mission_dir.unlink()
         recombine(glider, mission)
         # Call follow-up scripts
         update_ncs(glider, mission, 'complete_mission')
