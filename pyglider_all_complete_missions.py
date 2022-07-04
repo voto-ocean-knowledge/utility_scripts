@@ -1,7 +1,8 @@
+import datetime
 import os
 import sys
 import pathlib
-import argparse
+import pandas as pd
 import numpy as np
 import logging
 import glob
@@ -47,7 +48,7 @@ def batched_process(glider, mission):
     # Process input files in batches
     num_files = len(in_files_gli)
     starts = np.arange(0, num_files, batch_size)
-    ends = np.arange(batch_size, num_files + batch_size , batch_size)
+    ends = np.arange(batch_size, num_files + batch_size, batch_size)
     # fix for if we have 2 or fewer files in final batch
     if num_files - starts[-1] < 3:
         starts = starts[:-1]
@@ -87,17 +88,32 @@ if __name__ == '__main__':
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     _log.info("Start complete reprocessing")
-    glider_paths = list(pathlib.Path("/data/data_l0_pyglider/complete_mission").glob("SEA*"))
-    glidermissions = []
-    for glider_path in glider_paths:
-        mission_paths = glider_path.glob("M*")
-        for mission_path in mission_paths:
-            try:
-                glidermissions.append((int(glider_path.parts[-1][3:]), int(mission_path.parts[-1][1:])))
-            except:
-                _log.warning(f"Could not process {mission_path}")
+    if pathlib.Path("/home/pipeline/reprocess.csv").exists():
+        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', dtype=int)
+        df_reprocess.sort_values("proc_time")
 
-    for glider, mission in glidermissions:
+    else:
+        gliders, missions, glidermissions = [], [], []
+        glider_paths = list(pathlib.Path("/data/data_l0_pyglider/complete_mission").glob("SEA*"))
+        for glider_path in glider_paths:
+            mission_paths = glider_path.glob("M*")
+            for mission_path in mission_paths:
+                try:
+                    glider = int(glider_path.parts[-1][3:])
+                    mission = int(mission_path.parts[-1][1:])
+                    glidermissions.append((glider, mission))
+                    gliders.append(glider)
+                    missions.append(mission)
+                except:
+                    _log.warning(f"Could not process {mission_path}")
+        proc_time = np.empty(len(missions), dtype=datetime.datetime)
+        proc_time[:] = datetime.datetime(1970, 1, 1)
+        df_reprocess = pd.DataFrame({"glider": gliders, "mission": missions, "proc_time": proc_time})
+        df_reprocess.sort_values(["glider", "mission"])
+        df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
+
+    for i, row in df_reprocess.iterrows():
+        glider, mission, proc = row.glider, row.mission, row.proc_time
         _log.info(f"Reprocessing SEA{glider} M{mission}")
         batched_process(glider, mission)
         mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}")
@@ -116,4 +132,6 @@ if __name__ == '__main__':
         from add_profiles import init_db, add_complete_profiles
         init_db()
         add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
+        df_reprocess.at[i, "proc_time"] = datetime.datetime.now()
+        df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
