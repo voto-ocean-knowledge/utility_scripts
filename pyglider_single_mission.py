@@ -6,6 +6,8 @@ import numpy as np
 import logging
 import glob
 import shutil
+import pandas as pd
+import datetime
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
@@ -122,4 +124,10 @@ if __name__ == '__main__':
         from add_profiles import init_db, add_complete_profiles
         init_db()
         add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}"))
+        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv')
+        a = [np.logical_and(df_reprocess.glider == args.glider, df_reprocess.mission == args.mission)]
+        ind = df_reprocess.index[tuple(a)].values[0]
+        df_reprocess.at[ind, "proc_time"] = datetime.datetime.now()
+        _log.info(f"updated processing time to {datetime.datetime.now()}")
+        df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
