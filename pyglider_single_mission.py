@@ -105,6 +105,9 @@ if __name__ == '__main__':
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     batched_process(args)
+    mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")
+    if mission_dir.exists():
+        shutil.rmtree(mission_dir)
     recombine(args.glider, args.mission)
     # Call follow-up scripts
     if args.kind == "raw":
