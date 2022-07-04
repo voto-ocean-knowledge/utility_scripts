@@ -89,8 +89,8 @@ if __name__ == '__main__':
                         datefmt='%Y-%m-%d %H:%M:%S')
     _log.info("Start complete reprocessing")
     if pathlib.Path("/home/pipeline/reprocess.csv").exists():
-        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', dtype=int)
-        df_reprocess.sort_values("proc_time")
+        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv')
+        df_reprocess.sort_values("proc_time", inplace=True)
 
     else:
         gliders, missions, glidermissions = [], [], []
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         proc_time = np.empty(len(missions), dtype=datetime.datetime)
         proc_time[:] = datetime.datetime(1970, 1, 1)
         df_reprocess = pd.DataFrame({"glider": gliders, "mission": missions, "proc_time": proc_time})
-        df_reprocess.sort_values(["glider", "mission"])
+        df_reprocess.sort_values(["glider", "mission"], inplace=True)
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
 
     for i, row in df_reprocess.iterrows():
