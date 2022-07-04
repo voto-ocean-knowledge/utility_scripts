@@ -83,7 +83,7 @@ def batched_process(glider, mission):
 if __name__ == '__main__':
     logf = f'/data/log/complete_mission_reprocess.log'
     logging.basicConfig(filename=logf,
-                        filemode='w',
+                        filemode='a',
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
