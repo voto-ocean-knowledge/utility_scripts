@@ -17,3 +17,6 @@ echo removing sub data
 echo ""
 rm -rf /data/data_raw/complete_mission/SEA$glider/M$missionsub*
 rm -rf /data/data_l0_pyglider/complete_mission/SEA$glider/M$missionsub*
+echo ""
+echo removing rawnc files
+rm -rf /data/data_l0_pyglider/complete_mission/SEA$glider/M$mission/rawnc

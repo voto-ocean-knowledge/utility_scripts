@@ -7,6 +7,7 @@ import numpy as np
 import logging
 import glob
 import shutil
+import subprocess
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
@@ -121,6 +122,7 @@ if __name__ == '__main__':
             shutil.rmtree(mission_dir)
         recombine(glider, mission)
         # Call follow-up scripts
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", glider, mission])
         update_ncs(glider, mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences

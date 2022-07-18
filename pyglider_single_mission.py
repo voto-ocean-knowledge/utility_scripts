@@ -8,6 +8,7 @@ import glob
 import shutil
 import pandas as pd
 import datetime
+import subprocess
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
@@ -113,6 +114,7 @@ if __name__ == '__main__':
     recombine(args.glider, args.mission)
     # Call follow-up scripts
     if args.kind == "raw":
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", args.glider, args.mission])
         update_ncs(args.glider, args.mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences
