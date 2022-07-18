@@ -114,7 +114,7 @@ if __name__ == '__main__':
     recombine(args.glider, args.mission)
     # Call follow-up scripts
     if args.kind == "raw":
-        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", args.glider, args.mission])
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(args.glider), str(args.mission)])
         update_ncs(args.glider, args.mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences

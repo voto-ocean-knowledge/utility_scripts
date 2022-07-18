@@ -122,7 +122,7 @@ if __name__ == '__main__':
             shutil.rmtree(mission_dir)
         recombine(glider, mission)
         # Call follow-up scripts
-        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", glider, mission])
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(glider), str(mission)])
         update_ncs(glider, mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences
