@@ -1,3 +1,6 @@
 __pycache__/
 .idea
 secrets.json
+email_secrets.json
+email_log.txt
+lastcheck.txt

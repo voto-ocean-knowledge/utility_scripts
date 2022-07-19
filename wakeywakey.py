@@ -1,0 +1,93 @@
+"""
+Python script to alert the listener to alarm emails from SeaExplorer gliders
+requires Python packages gtts and pydub
+Requires ffmpeg to play audio on linux
+Replace "al.mp3" with a path to an audio track of your choice for the alarm sound
+Recommend running as a cron job at a regular interval
+"""
+import email
+import imaplib
+from gtts import gTTS
+import json
+from pydub import AudioSegment
+from pydub.playback import play
+from datetime import datetime
+from pathlib import Path
+
+
+with open("email_secrets.json") as json_file:
+    secrets = json.load(json_file)
+
+
+def sounds(text):
+    play(AudioSegment.from_mp3('al.mp3'))
+    glider, mission, __, __, alarm_code = text.split(" ")
+    message = f"sea {glider[4:-1]} has alarmed with code {alarm_code[6:-1]}. Get the fuck up"
+    speech = gTTS(text=message, lang="en", tld='com.au')
+    speech.save("message.mp3")
+    play(AudioSegment.from_mp3('message.mp3'))
+
+
+def read_email_from_gmail():
+    # check what time email was last checked
+    timefile = Path("lastcheck.txt")
+    if timefile.exists():
+        with open(timefile, "r") as variable_file:
+            for line in variable_file.readlines():
+                last_check = datetime.fromisoformat((line.strip()))
+    else:
+        last_check = datetime(1970, 1, 1)
+    # Write the time of this run
+    with open('lastcheck.txt', 'w') as f:
+        f.write(str(datetime.now()))
+    # Check gmail account for emails
+    mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    mail.login(secrets["email_username"], secrets["email_password"])
+    mail.select('inbox')
+
+    result, data = mail.search(None, 'ALL')
+    mail_ids = data[0]
+
+    id_list = mail_ids.split()
+    first_email_id = int(id_list[0])
+    latest_email_id = int(id_list[-1])
+    # Cut to last 10 emails
+    if len(id_list) > 10:
+        first_email_id = int(id_list[-10])
+
+    # Check which emails have arrived since the last run of this script
+    unread_emails = []
+    for i in range(first_email_id, latest_email_id + 1):
+        result, data = mail.fetch(str(i), '(RFC822)')
+
+        for response_part in data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
+                date_tuple = email.utils.parsedate_tz(msg['Date'])
+                if date_tuple:
+                    local_date = datetime.fromtimestamp(
+                        email.utils.mktime_tz(date_tuple))
+                    if local_date > last_check:
+                        unread_emails.append(i)
+
+    # Exit if no new emails
+    if not unread_emails:
+        with open('email_log.txt', 'a') as f:
+            f.write(str(datetime.now()) + ' no new mail' + '\n')
+        exit(0)
+
+    # Check new emails
+    for i in unread_emails:
+        result, data = mail.fetch(str(i), '(RFC822)')
+        for response_part in data:
+            if isinstance(response_part, tuple):
+                msg = email.message_from_bytes(response_part[1])
+                email_subject = msg['subject']
+                email_from = msg['from']
+                # If email is from alseamar and subject contains ALARM, make some noise
+                if "administrateur@alseamar-cloud.com" in email_from and "ALARM" in email_subject:
+                    sounds(email_subject)
+
+
+if __name__ == '__main__':
+    read_email_from_gmail()
