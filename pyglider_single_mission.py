@@ -17,7 +17,6 @@ os.chdir(script_dir)
 from utilities import natural_sort, match_input_files
 from process_pyglider import proc_pyglider_l0
 from recombine import recombine
-from geocode import update_ncs
 
 _log = logging.getLogger(__name__)
 
@@ -115,7 +114,6 @@ if __name__ == '__main__':
     # Call follow-up scripts
     if args.kind == "raw":
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(args.glider), str(args.mission)])
-        update_ncs(args.glider, args.mission, 'complete_mission')
         sys.path.append(str(parent_dir / "quick-plots"))
         # noinspection PyUnresolvedReferences
         from complete_mission_plots import complete_plots

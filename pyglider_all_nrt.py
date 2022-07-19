@@ -7,7 +7,6 @@ script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
 from process_pyglider import proc_pyglider_l0
-from geocode import update_ncs
 
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/pyglider_all_nrt.log',
@@ -34,8 +33,6 @@ def proc_all_nrt():
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
         _log.info(f"Reprocessing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir)
-        _log.info("adding basin to ncs")
-        update_ncs(glider, mission, "nrt")
     _log.info("Finished nrt processing")
 
 

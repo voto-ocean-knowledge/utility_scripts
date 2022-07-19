@@ -5,16 +5,38 @@ import logging
 import pathlib
 import argparse
 import shutil
+import numpy as np
 from collections import Counter
 _log = logging.getLogger(__name__)
 from itertools import chain
 
 df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
 
+
+def nmea2deg(nmea):
+    """
+    Convert a NMEA float to a decimal degree float.  e.g. -12640.3232 = -126.6721
+    """
+    deg = (np.fix(nmea / 100) +
+           np.sign(nmea) * np.remainder(np.abs(nmea), 100) / 60)
+    return deg
+
+
 def get_seas(gridfile):
     ds = xr.open_dataset(gridfile)
     lon = ds.longitude
     lat = ds.latitude
+    return locs_to_seas(lon, lat)
+
+
+def get_seas_merged_nav_nc(navfile):
+    ds = xr.open_dataset(navfile)
+    lon = nmea2deg(ds.Lon)
+    lat = nmea2deg(ds.Lat)
+    return locs_to_seas(lon, lat)
+
+
+def locs_to_seas(lon, lat):
     df_glider = pd.DataFrame({"lon": lon, "lat": lat})
     df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.lon, df_glider.lat))
     df_glider = df_glider.set_crs(epsg=4326)
