@@ -131,3 +131,6 @@ if __name__ == '__main__':
         _log.info(f"updated processing time to {datetime.datetime.now()}")
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline.sh", str(args.glider), str(args.mission)])
+        _log.info("Sent file to pipeline")
+        _log.info("Finished processing")

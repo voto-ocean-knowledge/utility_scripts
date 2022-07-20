@@ -61,7 +61,3 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=kind)
         ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
         ncprocess.extract_L0timeseries_profiles(outname, profiledir, deploymentyaml)
-
-
-if __name__ == '__main__':
-    proc_pyglider_l0(63, 35, "sub", "/data/data_raw/nrt/SEA063/000035/C-Csv", "/data/tmp/out")
