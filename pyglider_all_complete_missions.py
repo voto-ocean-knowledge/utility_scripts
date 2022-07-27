@@ -22,7 +22,7 @@ _log = logging.getLogger(__name__)
 
 def batched_process(glider, mission):
     steps = [1, 1, 1, 1]
-    batch_size = 100
+    batch_size = 200
     kind = "raw"
 
     # Process in batches of dives (default 100) to avoid maxxing out memory
@@ -58,7 +58,7 @@ def batched_process(glider, mission):
     for i in range(len(starts)):
         start = starts[i]
         end = ends[i]
-        in_sub_dir = f"{input_dir[:-1]}_sub_{i}/"
+        in_sub_dir = f"/data/tmp/subs/raw_SEA{glider}_M{mission}_sub_{i}/"
         if not pathlib.Path(in_sub_dir).exists():
             pathlib.Path(in_sub_dir).mkdir(parents=True)
         in_files_gli_sub = in_files_gli[start:end]
@@ -69,7 +69,7 @@ def batched_process(glider, mission):
         for filename in in_files_pld_sub:
             shutil.copy(filename, in_sub_dir)
         # create output directory
-        out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
+        out_sub_dir = f"/data/tmp/subs/proc_SEA{glider}_M{mission}_sub_{i}/"
         if not pathlib.Path(out_sub_dir).exists():
             pathlib.Path(out_sub_dir).mkdir(parents=True)
         # Process on sub-directory
