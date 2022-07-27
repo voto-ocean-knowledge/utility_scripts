@@ -17,7 +17,7 @@ _log = logging.getLogger(__name__)
 
 
 def recombine(glider_num, mission_num):
-    sub_dirs = list(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}").glob(f"M{mission_num}_sub*"))
+    sub_dirs = list(pathlib.Path(f"/data/tmp/subs").glob(f"proc_SEA{args.glider}_M{args.mission}_sub_*"))
     _log.info(f"Recombining glider {glider_num} mission {mission_num} from {len(sub_dirs)} batches")
     output_dir = f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}/M{mission_num}/"
     if not pathlib.Path(output_dir).exists():

@@ -25,7 +25,7 @@ def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
-        batch_size = 100
+        batch_size = 200
     if args.steps:
         steps = [int(item) for item in args.steps.split(',')]
     else:
@@ -64,7 +64,7 @@ def batched_process(args):
     for i in range(len(starts)):
         start = starts[i]
         end = ends[i]
-        in_sub_dir = f"{input_dir[:-1]}_sub_{i}/"
+        in_sub_dir = f"/data/tmp/subs/raw_SEA{args.glider}_M{args.mission}_sub_{i}/"
         if not pathlib.Path(in_sub_dir).exists():
             pathlib.Path(in_sub_dir).mkdir(parents=True)
         in_files_gli_sub = in_files_gli[start:end]
@@ -75,7 +75,7 @@ def batched_process(args):
         for filename in in_files_pld_sub:
             shutil.copy(filename, in_sub_dir)
         # create output directory
-        out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
+        out_sub_dir = f"/data/tmp/subs/proc_SEA{args.glider}_M{args.mission}_sub_{i}/"
         if not pathlib.Path(out_sub_dir).exists():
             pathlib.Path(out_sub_dir).mkdir(parents=True)
         # Process on sub-directory
