@@ -25,7 +25,7 @@ def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
-        batch_size = 200
+        batch_size = 50
     if args.steps:
         steps = [int(item) for item in args.steps.split(',')]
     else:
@@ -128,9 +128,10 @@ if __name__ == '__main__':
         a = [np.logical_and(df_reprocess.glider == args.glider, df_reprocess.mission == args.mission)]
         ind = df_reprocess.index[tuple(a)].values[0]
         df_reprocess.at[ind, "proc_time"] = datetime.datetime.now()
+        df_reprocess.sort_values("proc_time", inplace=True)
         _log.info(f"updated processing time to {datetime.datetime.now()}")
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline.sh", str(args.glider), str(args.mission)])
-        _log.info("Sent file to pipeline")
+        _log.info("Sent file to erddap")
         _log.info("Finished processing")
