@@ -89,7 +89,7 @@ if __name__ == '__main__':
                         datefmt='%Y-%m-%d %H:%M:%S')
     _log.info("Start complete reprocessing")
     if pathlib.Path("/home/pipeline/reprocess.csv").exists():
-        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv')
+        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
         df_reprocess.sort_values("proc_time", inplace=True)
 
     else:
