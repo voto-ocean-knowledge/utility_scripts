@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     for i, row in df_reprocess.iterrows():
         glider, mission, proc = row.glider, row.mission, row.proc_time
-        _log.info(f"Reprocessing SEA{glider} M{mission}")
+        _log.info(f"Start Reprocessing SEA{glider} M{mission}")
         _log.info(f"increment proc time by 1 day")
         df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(days=1)
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
@@ -138,3 +138,4 @@ if __name__ == '__main__':
         df_reprocess.at[i, "proc_time"] = datetime.datetime.now()
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
+        _log.info(f"Complete Reprocessing SEA{glider} M{mission}")
