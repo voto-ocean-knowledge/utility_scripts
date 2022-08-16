@@ -126,8 +126,13 @@ if __name__ == '__main__':
         add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}"))
         df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
         a = [np.logical_and(df_reprocess.glider == args.glider, df_reprocess.mission == args.mission)]
-        ind = df_reprocess.index[tuple(a)].values[0]
-        df_reprocess.at[ind, "proc_time"] = datetime.datetime.now()
+        if df_reprocess.index[tuple(a)].any():
+            ind = df_reprocess.index[tuple(a)].values[0]
+            df_reprocess.at[ind, "proc_time"] = datetime.datetime.now()
+        else:
+            new_row = pd.DataFrame({"glider": args.glider, "mission": args.mission,
+                                    "proc_time": datetime.datetime.now()}, index=[len(df_reprocess)])
+            df_reprocess = pd.concat((df_reprocess, new_row))
         df_reprocess.sort_values("proc_time", inplace=True)
         _log.info(f"updated processing time to {datetime.datetime.now()}")
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
