@@ -31,8 +31,8 @@ def batched_process(glider, mission):
         raise ValueError(f"Input dir {input_dir} not found")
     output_dir = f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/"
 
-    in_files_gli = natural_sort(glob.glob(f"{input_dir}*gli*"))
-    in_files_pld = natural_sort(glob.glob(f"{input_dir}*pld*{kind}*"))
+    in_files_gli = natural_sort(glob.glob(f"{input_dir}*gli*.gz"))
+    in_files_pld = natural_sort(glob.glob(f"{input_dir}*pld*{kind}*.gz"))
     in_files_gli, in_files_pld = match_input_files(in_files_gli, in_files_pld)
 
     if len(in_files_gli) == 0 or len(in_files_pld) == 0:
