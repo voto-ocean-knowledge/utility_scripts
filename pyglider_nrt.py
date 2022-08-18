@@ -2,7 +2,6 @@ import os
 import sys
 import pathlib
 import logging
-import pandas as pd
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
@@ -15,18 +14,25 @@ logging.basicConfig(filename='/data/log/pyglider_nrt.log',
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
+glider_no_proc = [57]
 
 
 def proc_nrt():
     _log.info("Start nrt processing")
-    try:
-        to_process = pd.read_csv('/home/pipeline/to_process.csv', dtype=int)
-    except FileNotFoundError:
-        _log.error("/home/pipeline/to_process.csv not found")
-        return
-    for i, row in to_process.iterrows():
-        glider = str(row.glider)
-        mission = str(row.mission)
+    all_glider_paths = pathlib.Path(f"/data/data_raw/nrt").glob("SEA*")
+    for glider_path in all_glider_paths:
+        glider = str(glider_path)[-3:].lstrip("0")
+        if int(glider) in glider_no_proc:
+            _log.info(f"SEA{glider} is not to be processed. Skipping")
+            continue
+        _log.info(f"Checking SEA{glider}")
+        mission_paths = list(glider_path.glob("00*"))
+        if not mission_paths:
+            _log.warning(f"No missions found for SEA{glider}. Skipping")
+            continue
+        mission_paths.sort()
+        mission = str(mission_paths[-1])[-3:].lstrip("0")
+        _log.info(f"Checking SEA{glider} M{mission}")
         input_dir = f"/data/data_raw/nrt/SEA{glider.zfill(3)}/{mission.zfill(6)}/C-Csv/"
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
         gridfiles_dir = f"{output_dir}gridfiles/"
@@ -35,7 +41,7 @@ def proc_nrt():
             nc_file = list(pathlib.Path(gridfiles_dir).glob('*.nc'))[0]
             nc_time = nc_file.lstat().st_mtime
         except IndexError:
-            _log.warning(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
+            _log.info(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
             nc_time = 0
             proc_steps = (1, 1, 1, 1)
         infile_time = 1
@@ -45,6 +51,9 @@ def proc_nrt():
                 infile_time = file.lstat().st_mtime
         if nc_time > infile_time:
             _log.info(f"No new SEA{glider} M{mission} input files")
+            continue
+        if not pathlib.Path(f"/data/deployment_yaml/mission_yaml/SEA{glider}_M{mission}.yml").exists():
+            _log.warning(f"yml file for SEA{glider} M{mission} not found.")
             continue
         _log.info(f"Processing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
