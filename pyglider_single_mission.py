@@ -25,7 +25,7 @@ def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
-        batch_size = 50
+        batch_size = 500
     if args.steps:
         steps = [int(item) for item in args.steps.split(',')]
     else:
@@ -50,7 +50,7 @@ def batched_process(args):
     if num_batches == 1:
         proc_pyglider_l0(args.glider, args.mission, args.kind, input_dir, output_dir, steps=steps)
         _log.info(f"Finished processing glider {args.glider} mission {args.mission} in {num_batches} batch")
-        return
+        return False
     # Process input files in batches
     num_files = len(in_files_gli)
     starts = np.arange(0, num_files, batch_size)
@@ -84,6 +84,7 @@ def batched_process(args):
         _log.info(f"Finished processing glider {args.glider} mission {args.mission} batch {i}")
 
     _log.info('Batched processing complete')
+    return True
 
 
 if __name__ == '__main__':
@@ -106,11 +107,12 @@ if __name__ == '__main__':
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
-    batched_process(args)
-    mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")
-    if mission_dir.exists():
-        shutil.rmtree(mission_dir)
-    recombine(args.glider, args.mission)
+    batched = batched_process(args)
+    if batched:
+        mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")
+        if mission_dir.exists():
+            shutil.rmtree(mission_dir)
+        recombine(args.glider, args.mission)
     # Call follow-up scripts
     if args.kind == "raw":
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(args.glider), str(args.mission)])

@@ -24,25 +24,10 @@ def recombine(glider_num, mission_num):
         pathlib.Path(output_dir).mkdir(parents=True)
     rawncdir = output_dir + 'rawnc/'
     l0tsdir = output_dir + 'timeseries/'
-    profiledir = output_dir + 'profiles/'
     griddir = output_dir + 'gridfiles/'
-    for dir in [rawncdir, l0tsdir, profiledir, griddir]:
+    for dir in [rawncdir, l0tsdir, griddir]:
         if not pathlib.Path(dir).exists():
             pathlib.Path(dir).mkdir(parents=True)
-    _log.info(f"Moving rawnc and l0 profiles files")
-    for i in range(len(sub_dirs)):
-        out_sub_dir = f"{output_dir[:-1]}_sub_{i}/"
-        sub_rawncdir = out_sub_dir + 'rawnc/'
-        sub_profiledir = out_sub_dir + 'profiles/'
-        in_raw_nc = glob.glob(f"{sub_rawncdir}*.pld*.nc")
-        for filename in in_raw_nc:
-            shutil.move(filename, rawncdir)
-        in_raw_gli = glob.glob(f"{sub_rawncdir}*.gli*.nc")
-        for filename in in_raw_gli:
-            shutil.move(filename, rawncdir)
-        in_profile = glob.glob(f"{sub_profiledir}*.nc")
-        for filename in in_profile:
-            shutil.move(filename, profiledir)
     _log.info("Looking for timeseries and gridfiles to recombine")
     sub_dirs.sort()
     sub_timeseries = []

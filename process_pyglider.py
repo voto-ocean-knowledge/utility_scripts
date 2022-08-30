@@ -60,4 +60,3 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         # Make level-0 timeseries netcdf file from the raw files...
         outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=kind)
         ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
-        ncprocess.extract_L0timeseries_profiles(outname, profiledir, deploymentyaml)
