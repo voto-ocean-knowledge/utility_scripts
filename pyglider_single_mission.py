@@ -107,6 +107,8 @@ if __name__ == '__main__':
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
+    subprocess.check_call(
+        ['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(args.glider), str(args.mission)])
     batched = batched_process(args)
     if batched:
         mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{args.glider}/M{args.mission}")

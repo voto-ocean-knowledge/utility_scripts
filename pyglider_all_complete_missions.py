@@ -118,6 +118,8 @@ if __name__ == '__main__':
         _log.info(f"increment proc time by 1 day")
         df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(days=1)
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(glider), str(mission)])
+
         batched_process(glider, mission)
         mission_dir = pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}")
         if mission_dir.exists():
