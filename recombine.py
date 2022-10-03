@@ -4,7 +4,7 @@ import sys
 import os
 import glob
 import xarray as xr
-import shutil
+import numpy as np
 import logging
 
 
@@ -48,6 +48,8 @@ def recombine(glider_num, mission_num):
         return
     mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
     _log.info('loaded timeseries')
+    total_dives = len(np.unique(mission_timeseries.dive_num.values))
+    mission_timeseries.attrs["total_dives"] = total_dives
     mission_timeseries = fix_profile_number(mission_timeseries, var_name='profile_index')
     _log.info('fixed timeseries profile numbers')
     mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
