@@ -3,6 +3,8 @@ import sys
 import pathlib
 import shutil
 import yaml
+import xarray as xr
+import numpy as np
 from geocode import get_seas_merged_nav_nc
 
 script_dir = pathlib.Path(__file__).parent.absolute()
@@ -54,6 +56,18 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         nav_nc = list(pathlib.Path(rawncdir).glob("*rawgli.nc"))[0]
         basin = get_seas_merged_nav_nc(nav_nc)
         deployment['metadata']["basin"] = basin
+        # More custom metadata
+        ds = xr.open_dataset(nav_nc)
+        total_dives = len(np.unique(ds.fnum.values))
+        deployment['metadata']["total_dives"] = total_dives
+        glider_num_pad = str(deployment['metadata']['glider_serial']).zfill(3)
+        dataset_type = "nrt" if kind == "sub" else "delayed"
+        dataset_id = f"{dataset_type}_SEA{glider_num_pad}_M{deployment['metadata']['deployment_id']}"
+        deployment['metadata']["dataset_id"] = dataset_id
+        variables = list(deployment["netcdf_variables"].keys())
+        if "timebase" in variables:
+            variables.remove("timebase")
+        deployment['metadata']["variables"] = variables
         with open(deploymentyaml, "w") as fin:
             yaml.dump(deployment, fin)
     if steps[3]:
