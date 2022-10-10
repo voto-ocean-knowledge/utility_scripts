@@ -1,6 +1,7 @@
 import geopandas as gp
 import pandas as pd
 import xarray as xr
+import polars as pl
 import logging
 import pathlib
 import argparse
@@ -30,9 +31,9 @@ def get_seas(gridfile):
 
 
 def get_seas_merged_nav_nc(navfile):
-    ds = xr.open_dataset(navfile)
-    lon = nmea2deg(ds.Lon)
-    lat = nmea2deg(ds.Lat)
+    df = pl.read_parquet(navfile)
+    lon = nmea2deg(df.select("Lon").to_numpy()[:, 0])
+    lat = nmea2deg(df.select("Lat").to_numpy()[:, 0])
     return locs_to_seas(lon, lat)
 
 

@@ -3,7 +3,7 @@ import sys
 import pathlib
 import shutil
 import yaml
-import xarray as xr
+import polars as pl
 import numpy as np
 from geocode import get_seas_merged_nav_nc
 
@@ -53,12 +53,12 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         # geolocate and add helcom basin info to yaml
         with open(original_deploymentyaml) as fin:
             deployment = yaml.safe_load(fin)
-        nav_nc = list(pathlib.Path(rawncdir).glob("*rawgli.nc"))[0]
+        nav_nc = list(pathlib.Path(rawncdir).glob("*rawgli.parquet"))[0]
         basin = get_seas_merged_nav_nc(nav_nc)
         deployment['metadata']["basin"] = basin
         # More custom metadata
-        ds = xr.open_dataset(nav_nc)
-        total_dives = len(np.unique(ds.fnum.values))
+        df = pl.read_parquet(nav_nc)
+        total_dives = df.select("fnum").unique().shape[0]
         deployment['metadata']["total_dives"] = total_dives
         glider_num_pad = str(deployment['metadata']['glider_serial']).zfill(3)
         dataset_type = "nrt" if kind == "sub" else "delayed"
