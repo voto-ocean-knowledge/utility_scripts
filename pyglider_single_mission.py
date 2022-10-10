@@ -107,6 +107,7 @@ if __name__ == '__main__':
                         format='%(asctime)s %(levelname)-8s %(message)s',
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
+    start = datetime.datetime.now()
     subprocess.check_call(
         ['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(args.glider), str(args.mission)])
     batched = batched_process(args)
@@ -133,9 +134,11 @@ if __name__ == '__main__':
         if df_reprocess.index[tuple(a)].any():
             ind = df_reprocess.index[tuple(a)].values[0]
             df_reprocess.at[ind, "proc_time"] = datetime.datetime.now()
+            df_reprocess.at[ind, "duration"] = datetime.datetime.now() - start
         else:
             new_row = pd.DataFrame({"glider": args.glider, "mission": args.mission,
-                                    "proc_time": datetime.datetime.now()}, index=[len(df_reprocess)])
+                                    "proc_time": datetime.datetime.now(), "duration": datetime.datetime.now() - start},
+                                   index=[len(df_reprocess)])
             df_reprocess = pd.concat((df_reprocess, new_row))
         df_reprocess.sort_values("proc_time", inplace=True)
         _log.info(f"updated processing time to {datetime.datetime.now()}")
