@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 import logging
+import argparse
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/nrt_from_complete.log',
                     filemode='a',
@@ -30,10 +31,20 @@ def nrt_proc_from_complete_nc(glider, mission):
 
     ds_new = ds_new.assign_coords({"longitude": ds_new.longitude, "latitude": ds_new.latitude, "depth": ds_new.depth})
     ds_new.attrs = ds.attrs
+    ds.attrs["total_dives"] = np.unique(ds_new.dive_num.values)
     out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
     if not out_path.exists():
         out_path.mkdir(parents=True)
-    ds_new.to_netcdf(out_path / "mission_timeseries.nc")
+        
+    if 'units' in ds_new.time.attrs.keys():
+        ds_new.time.attrs.pop('units')
+    if 'calendar' in ds_new.time.attrs.keys():
+        ds_new.time.attrs.pop('calendar')
+    if 'ad2cp_time' in list(ds_new):
+        if 'units' in ds_new.ad2cp_time.attrs.keys():
+            ds_new.ad2cp_time.attrs.pop('units')
+
+    ds_new.to_netcdf(out_path / "mission_timeseries.nc" 'w', encoding={'time': {'units':'seconds since 1970-01-01T00:00:00Z'}})
 
 
 def all_nrt_from_complete(reprocess=True):
@@ -70,4 +81,14 @@ def all_nrt_from_complete(reprocess=True):
 
 
 if __name__ == '__main__':
-    all_nrt_from_complete()
+    parser = argparse.ArgumentParser(description='process SX files with pyglider')
+    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
+    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
+
+    args = parser.parse_args()
+    if not args.glider:
+        print("processing all glidermissions")
+        all_nrt_from_complete()
+    else:
+        _log.info(f"Processing SEA{args.glider} M{args.mission}")
+        nrt_proc_from_complete_nc(args.glider, args.mission)
