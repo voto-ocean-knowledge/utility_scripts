@@ -19,7 +19,7 @@ def all_nrt_from_complete(reprocess=True):
             glider = int(glider_path.parts[-1][3:])
             mission = int(mission_path.parts[-1][1:])
             nrt_path = Path(f"/data/data_raw/nrt/SEA0{str(glider).zfill(2)}/{str(mission).zfill(6)}/C-Csv/")
-            out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
+            out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/rawnc")
             if nrt_path.exists() and out_path.exists():
                 _log.debug(f"nrt path {nrt_path} exists. Skipping")
                 continue
