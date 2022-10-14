@@ -30,6 +30,9 @@ def proc_all_nrt():
 
     for glider, mission in glidermissions:
         input_dir = f"/data/data_raw/nrt/SEA{str(glider).zfill(3)}/{str(mission).zfill(6)}/C-Csv/"
+        if not pathlib.Path(input_dir).exists():
+            _log.info(f"SEA{glider} M{mission} does not have nrt alseamar raw files. skipping")
+            continue
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
         _log.info(f"Reprocessing SEA{glider} M{mission}")
         proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir)
