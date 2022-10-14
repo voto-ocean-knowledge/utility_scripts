@@ -44,7 +44,7 @@ def nrt_proc_from_complete_nc(glider, mission):
         if 'units' in ds_new.ad2cp_time.attrs.keys():
             ds_new.ad2cp_time.attrs.pop('units')
 
-    ds_new.to_netcdf(out_path / "mission_timeseries.nc" 'w', encoding={'time': {'units':'seconds since 1970-01-01T00:00:00Z'}})
+    ds_new.to_netcdf(out_path / "mission_timeseries.nc" encoding={'time': {'units':'seconds since 1970-01-01T00:00:00Z'}})
 
 
 if __name__ == '__main__':
