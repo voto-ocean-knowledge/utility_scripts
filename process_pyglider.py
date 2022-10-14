@@ -4,7 +4,7 @@ import pathlib
 import shutil
 import yaml
 import polars as pl
-import numpy as np
+import xarray as xr
 from geocode import get_seas_merged_nav_nc
 
 script_dir = pathlib.Path(__file__).parent.absolute()
@@ -73,4 +73,13 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
     if steps[3]:
         # Make level-0 timeseries netcdf file from the raw files...
         outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=kind)
+        tempfile = f"/data/tmp/SEA{glider}_M{mission}"
+        int_vars = ["angular_cmd", "ballast_cmd", "linear_cmd", "nav_state", "security_level", "dive_num",
+                    "desired_heading"]
+        ds = xr.open_dataset(outname)
+        for var in list(ds):
+            if var in int_vars:
+                ds[var] = ds[var].astype(int)
+        ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+        shutil.move(tempfile, outname)
         ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
