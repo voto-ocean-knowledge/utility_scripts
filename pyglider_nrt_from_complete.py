@@ -31,7 +31,7 @@ def nrt_proc_from_complete_nc(glider, mission):
 
     ds_new = ds_new.assign_coords({"longitude": ds_new.longitude, "latitude": ds_new.latitude, "depth": ds_new.depth})
     ds_new.attrs = ds.attrs
-    ds.attrs["total_dives"] = np.unique(ds_new.dive_num.values)
+    ds_new.attrs["total_dives"] = np.unique(ds_new.dive_num.values)
     out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
     if not out_path.exists():
         out_path.mkdir(parents=True)
