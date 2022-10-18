@@ -18,15 +18,15 @@ logging.basicConfig(filename='/data/log/pyglider_all_nrt.log',
 
 def proc_all_nrt():
     _log.info("Start nrt reprocessing")
-    glider_paths = list(pathlib.Path("/data/data_l0_pyglider/nrt").glob("SEA*"))
+    yml_files = list(pathlib.Path("/data/deployment_yaml/mission_yaml").glob("*.yml"))
     glidermissions = []
-    for glider_path in glider_paths:
-        mission_paths = glider_path.glob("M*")
-        for mission_path in mission_paths:
-            try:
-                glidermissions.append((int(glider_path.parts[-1][3:]), int(mission_path.parts[-1][1:])))
-            except:
-                _log.warning(f"Could not process {mission_path}")
+    for yml_path in yml_files:
+        fn = yml_path.name.split(".")[0]
+        glider_name, mission_name = fn.split("_")
+        try:
+            glidermissions.append((int(glider_name[3:]), int(mission_name[1:])))
+        except:
+            _log.warning(f"Could not process {fn}")
 
     for glider, mission in glidermissions:
         input_dir = f"/data/data_raw/nrt/SEA{str(glider).zfill(3)}/{str(mission).zfill(6)}/C-Csv/"
