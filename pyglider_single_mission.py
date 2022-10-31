@@ -25,7 +25,7 @@ def batched_process(args):
     if args.batchsize:
         batch_size = args.batchsize
     else:
-        batch_size = 200
+        batch_size = 20
     if args.steps:
         steps = [int(item) for item in args.steps.split(',')]
     else:

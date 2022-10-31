@@ -65,9 +65,12 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         dataset_id = f"{dataset_type}_SEA{glider_num_pad}_M{deployment['metadata']['deployment_id']}"
         deployment['metadata']["dataset_id"] = dataset_id
         variables = list(deployment["netcdf_variables"].keys())
+        if "keep_variables" in variables:
+            variables.remove("keep_variables")
         if "timebase" in variables:
             variables.remove("timebase")
-        deployment['metadata']["variables"] = variables
+        vars_list = ",".join(variables)
+        deployment['metadata']["variables"] = vars_list
         with open(deploymentyaml, "w") as fin:
             yaml.dump(deployment, fin)
     if steps[3]:
@@ -80,6 +83,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         for var in list(ds):
             if var in int_vars:
                 ds[var] = ds[var].astype(int)
+        ds.attrs["variables"] = variables
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
         ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)

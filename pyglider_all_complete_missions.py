@@ -22,7 +22,7 @@ _log = logging.getLogger(__name__)
 
 def batched_process(glider, mission):
     steps = [1, 1, 1, 1]
-    batch_size = 200
+    batch_size = 20
     kind = "raw"
 
     # Process in batches of dives (default 100) to avoid maxxing out memory
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         glider, mission, proc = row.glider, row.mission, row.proc_time
         _log.info(f"Start Reprocessing SEA{glider} M{mission}")
         _log.info(f"increment proc time by 1 day")
-        df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(days=1)
+        df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(hours=3)
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(glider), str(mission)])
 
