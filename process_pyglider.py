@@ -12,6 +12,9 @@ parent_dir = script_dir.parents[0]
 pyglider_dir = parent_dir / 'pyglider'
 sys.path.append(str(pyglider_dir))
 os.chdir(pyglider_dir)
+qc_dir = parent_dir / "voto_glider_qc"
+sys.path.append(str(qc_dir))
+from flag_qartod import flagger, apply_flags
 
 import pyglider.seaexplorer as seaexplorer
 import pyglider.ncprocess as ncprocess
@@ -49,7 +52,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         seaexplorer.raw_to_rawnc(rawdir, rawncdir, original_deploymentyaml, incremental=True)
     if steps[2]:
         # merge individual netcdf files into single netcdf files *.gli*.nc and *.pld1*.nc
-        seaexplorer.merge_rawnc(rawncdir, rawncdir, original_deploymentyaml, kind=kind)
+        seaexplorer.merge_parquet(rawncdir, rawncdir, original_deploymentyaml, kind=kind)
         # geolocate and add helcom basin info to yaml
         with open(original_deploymentyaml) as fin:
             deployment = yaml.safe_load(fin)
@@ -82,6 +85,9 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         for var in list(ds):
             if var in int_vars:
                 ds[var] = ds[var].astype(int)
+        ds = flagger(ds)
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
-        ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
+        ds = apply_flags(ds)
+        ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+        ncprocess.make_L0_gridfiles(tempfile, griddir, deploymentyaml)
