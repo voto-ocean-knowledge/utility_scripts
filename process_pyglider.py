@@ -82,10 +82,10 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         int_vars = ["angular_cmd", "ballast_cmd", "linear_cmd", "nav_state", "security_level", "dive_num",
                     "desired_heading"]
         ds = xr.open_dataset(outname)
-        for var in list(ds):
-            if var in int_vars:
-                ds[var] = ds[var].astype(int)
         ds = flagger(ds)
+        for var in list(ds):
+            if var in int_vars or var[:-2:] == "qc":
+                ds[var] = ds[var].astype(int)
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
         ds = apply_flags(ds)
