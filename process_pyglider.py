@@ -130,8 +130,10 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
             if var in int_vars or var[-2:] == "qc":
                 ds[var] = ds[var].astype(int)
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
+        max_profile = ds.profile_index.values.max()
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
         ds = apply_flags(ds)
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         ncprocess.make_L0_gridfiles(tempfile, griddir, deploymentyaml)
+        return max_profile

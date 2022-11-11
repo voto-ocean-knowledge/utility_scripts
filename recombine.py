@@ -11,7 +11,6 @@ import logging
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
-from utilities import fix_profile_number
 
 _log = logging.getLogger(__name__)
 
