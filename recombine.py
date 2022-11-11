@@ -18,7 +18,6 @@ _log = logging.getLogger(__name__)
 
 def recombine(glider_num, mission_num):
     sub_dirs = list(pathlib.Path(f"/data/tmp/subs").glob(f"proc_SEA{glider_num}_M{mission_num}_sub_*"))
-    sub_dirs = list(pathlib.Path(f"/home/callum/Downloads/glider_data/reco").glob("proc_SEA55_M21_sub_1*"))
     _log.info(f"Recombining glider {glider_num} mission {mission_num} from {len(sub_dirs)} batches")
     output_dir = f"/data/data_l0_pyglider/complete_mission/SEA{glider_num}/M{mission_num}/"
     if not pathlib.Path(output_dir).exists():
@@ -51,9 +50,6 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
-    foo = bar
-    mission_timeseries = fix_profile_number(mission_timeseries, var_name='profile_index')
-    mission_timeseries["profile"].values = mission_timeseries["profile_index"].values
     _log.info('fixed timeseries profile numbers')
     mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
@@ -62,7 +58,6 @@ def recombine(glider_num, mission_num):
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     _log.info('loaded gridded')
-    mission_grid = fix_profile_number(mission_grid)
     _log.info('fixed gridded profile numbers')
     mission_grid.to_netcdf(griddir + "mission_grid.nc")
     _log.info('wrote gridded')
@@ -70,9 +65,6 @@ def recombine(glider_num, mission_num):
 
 
 if __name__ == '__main__':
-    recombine(66, 66)
-
-def foo():
     parser = argparse.ArgumentParser(description='recombine SX files with pyglider')
     parser.add_argument('glider', type=int, help='glider number, e.g. 70')
     parser.add_argument('mission', type=int, help='Mission number, e.g. 23')

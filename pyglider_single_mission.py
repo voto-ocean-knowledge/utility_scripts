@@ -80,7 +80,8 @@ def batched_process(args):
             pathlib.Path(out_sub_dir).mkdir(parents=True)
         # Process on sub-directory
         _log.info(f"Started processing glider {args.glider} mission {args.mission} batch {i}")
-        proc_pyglider_l0(args.glider, args.mission, args.kind, in_sub_dir, out_sub_dir, steps=steps)
+        batch_add = batch_size * i
+        proc_pyglider_l0(args.glider, args.mission, args.kind, in_sub_dir, out_sub_dir, steps=steps, profile_bump=batch_add)
         _log.info(f"Finished processing glider {args.glider} mission {args.mission} batch {i}")
 
     _log.info('Batched processing complete')

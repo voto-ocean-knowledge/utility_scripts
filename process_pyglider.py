@@ -27,7 +27,7 @@ def safe_delete(directories):
             shutil.rmtree(directory)
 
 
-def set_profile_numbers(ds):
+def set_profile_numbers(ds, profile_bump=0):
     ds["dive_num"] = ds["dive_num"].astype(int)
     df = ds.to_pandas()
     df["profile_index"] = 0
@@ -54,7 +54,7 @@ def set_profile_numbers(ds):
     df.loc[df.profile_index % 2 == 0, "profile_direction"] = 1
     ds["profile_index"] = df.dive_num.copy()
     ds["profile_direction"] = df.dive_num.copy()
-    ds["profile_index"].values = df.profile_index
+    ds["profile_index"].values = df.profile_index + profile_bump
     ds["profile_direction"].values = df.profile_direction
     ds["profile_index"].attrs = {'long_name': 'profile index',
                                  'units': '1',
@@ -68,7 +68,7 @@ def set_profile_numbers(ds):
     return ds
 
 
-def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
+def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), profile_bump=0):
     if kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
     rawdir = input_dir + '/'
@@ -129,7 +129,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         for var in ds_variables:
             if var in int_vars or var[-2:] == "qc":
                 ds[var] = ds[var].astype(int)
-        ds = set_profile_numbers(ds)
+        ds = set_profile_numbers(ds, profile_bump=profile_bump)
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
         ds = apply_flags(ds)
