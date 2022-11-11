@@ -120,7 +120,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         outname = seaexplorer.raw_to_L0timeseries(rawncdir, l0tsdir, deploymentyaml, kind=kind)
         tempfile = f"/data/tmp/SEA{glider}_M{mission}"
         int_vars = ["angular_cmd", "ballast_cmd", "linear_cmd", "nav_state", "security_level", "dive_num",
-                    "desired_heading", "chlorophyll_raw", "phycocyanin_raw", "turbidity_raw"]
+                    "desired_heading", "chlorophyll_raw", "phycocyanin_raw", "turbidity_raw", "backscatter_raw"]
         ds = xr.open_dataset(outname)
         ds = flagger(ds)
         ds_variables = list(ds)
