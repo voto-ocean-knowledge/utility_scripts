@@ -64,7 +64,7 @@ def set_profile_numbers(ds, profile_bump=0):
                                      'sources': 'pressure, time, dive_num',
                                      'comment': '-1 = ascending, 1 = descending'}
     ds["profile"] = ds["profile_index"].copy()
-    ds["profile"].attrs["long_name"] = "profile number"
+    ds["profile_num"].attrs["long_name"] = "profile number"
     return ds
 
 
