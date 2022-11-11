@@ -126,9 +126,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=()):
         ds_variables = list(ds)
         for var in ds_variables:
             if var in int_vars or var[-2:] == "qc":
-                print(var)
                 ds[var] = ds[var].astype(int)
-                print(type(ds[var].values[0]))
         ds = set_profile_numbers(ds)
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
         shutil.move(tempfile, outname)
