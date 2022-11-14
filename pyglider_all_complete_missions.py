@@ -55,6 +55,7 @@ def batched_process(glider, mission):
         ends[-2] = ends[-1]
         ends = ends[:-1]
         _log.info(f"reduced to {len(starts)} batches")
+    max_profile = 0
     for i in range(len(starts)):
         start = starts[i]
         end = ends[i]
@@ -74,7 +75,8 @@ def batched_process(glider, mission):
             pathlib.Path(out_sub_dir).mkdir(parents=True)
         # Process on sub-directory
         _log.info(f"Started processing glider {glider} mission {mission} batch {i}")
-        proc_pyglider_l0(glider, mission, kind, in_sub_dir, out_sub_dir, steps=steps)
+        max_profile = proc_pyglider_l0(glider, mission, kind, in_sub_dir, out_sub_dir, steps=steps,
+                                       profile_bump=max_profile)
         _log.info(f"Finished processing glider {glider} mission {mission} batch {i}")
 
     _log.info('Batched processing complete')

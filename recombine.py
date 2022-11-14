@@ -49,7 +49,6 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
-    _log.info('fixed timeseries profile numbers')
     mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory
@@ -57,7 +56,6 @@ def recombine(glider_num, mission_num):
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     _log.info('loaded gridded')
-    _log.info('fixed gridded profile numbers')
     mission_grid.to_netcdf(griddir + "mission_grid.nc")
     _log.info('wrote gridded')
     _log.info("Recombination complete")
