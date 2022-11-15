@@ -14,12 +14,11 @@ logging.basicConfig(filename='/data/log/nrt_from_complete.log',
 def nrt_proc_from_complete_nc(glider, mission):
     nc = Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/timeseries/mission_timeseries.nc")
     ds = xr.open_dataset(nc)
-    dives = ds.dive_num.values
-    sample_num = np.arange(len(dives))
+    ds = ds.coarsen(time=40, boundary="trim").mean()
+    dives = ds.profile_index.values
     keep_array = np.empty(len(dives), dtype=bool)
     keep_array[:] = False
-    keep_array[np.logical_and(dives % 10 == 0, sample_num % 40 == 0)] = True
-
+    keep_array[dives % 20 < 1.1] = True
     ds_new = xr.Dataset()
     time = ds.time.values[keep_array]
     ds_new["time"] = time
