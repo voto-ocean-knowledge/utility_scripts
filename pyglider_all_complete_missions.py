@@ -93,6 +93,26 @@ if __name__ == '__main__':
     if pathlib.Path("/home/pipeline/reprocess.csv").exists():
         df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
         df_reprocess.sort_values("proc_time", inplace=True)
+        _log.warning(f"start length {len(df_reprocess)}")
+        glider_paths = list(pathlib.Path("/data/data_l0_pyglider/complete_mission").glob("SEA*"))
+        for glider_path in glider_paths:
+            mission_paths = glider_path.glob("M*")
+            for mission_path in mission_paths:
+                glider = int(glider_path.parts[-1][3:])
+                mission = int(mission_path.parts[-1][1:])
+                a = [np.logical_and(df_reprocess.glider == glider, df_reprocess.mission == mission)]
+                if not df_reprocess.index[tuple(a)].any():
+                    _log.warning(f"new {mission_path}")
+                    nc_file = list((mission_path / "timeseries").glob('*.nc'))[0]
+                    nc_time = nc_file.lstat().st_mtime
+                    nc_time = datetime.datetime.fromtimestamp(nc_time)
+                    new_row = pd.DataFrame({"glider": glider, "mission": mission,
+                                            "proc_time": nc_time, "duration": datetime.timedelta(minutes=20)},
+                                           index=[len(df_reprocess)])
+                    df_reprocess = pd.concat((df_reprocess, new_row))
+        _log.warning(f"end length {len(df_reprocess)}")
+
+        df_reprocess.sort_values("proc_time", inplace=True)
 
     else:
         gliders, missions, glidermissions = [], [], []
