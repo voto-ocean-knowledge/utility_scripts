@@ -30,6 +30,12 @@ def nrt_proc_from_complete_nc(glider, mission):
 
     ds_new = ds_new.assign_coords({"longitude": ds_new.longitude, "latitude": ds_new.latitude, "depth": ds_new.depth})
     ds_new.attrs = ds.attrs
+    int_vars = ["angular_cmd", "ballast_cmd", "linear_cmd", "nav_state", "security_level", "dive_num",
+                "desired_heading", "chlorophyll_raw", "phycocyanin_raw", "turbidity_raw", "backscatter_raw"]
+    ds_variables = list(ds)
+    for var in ds_variables:
+        if var in int_vars or var[-2:] == "qc":
+            ds[var] = ds[var].astype(int)
     ds_new.attrs["total_dives"] = np.unique(ds_new.dive_num.values)
     out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
     if not out_path.exists():

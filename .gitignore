@@ -1,7 +1,6 @@
 __pycache__/
 .idea
-secrets.json
-email_secrets.json
+*secrets*
 email_log.txt
 lastcheck.txt
 message.mp3
