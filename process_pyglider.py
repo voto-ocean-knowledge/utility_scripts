@@ -35,7 +35,10 @@ def set_profile_numbers(ds, profile_bump=0):
     dive_nums = np.unique(df.dive_num)
     for num in dive_nums:
         df_dive = df[df.dive_num == num]
-        deep_inflect = df_dive[df_dive.pressure == df_dive.pressure.max()].index.values[0]
+        if np.isnan(df_dive.pressure).all():
+            deep_inflect = df_dive.index[int(len(df_dive)/2)]
+        else:
+            deep_inflect = df_dive[df_dive.pressure == df_dive.pressure.max()].index.values[0]
         deepest_points.append(deep_inflect)
 
     previous_deep_inflect = deepest_points[0]
@@ -44,7 +47,10 @@ def set_profile_numbers(ds, profile_bump=0):
     for i, deep_inflect in enumerate(deepest_points[1:]):
         num = i + 1
         df_deep_to_deep = df.loc[previous_deep_inflect: deep_inflect]
-        shallow_inflect = df_deep_to_deep[df_deep_to_deep.pressure == df_deep_to_deep.pressure.min()].index.values[0]
+        if np.isnan(df_deep_to_deep.pressure).all():
+            shallow_inflect = df_deep_to_deep.index[int(len(df_deep_to_deep)/2)]
+        else:
+            shallow_inflect = df_deep_to_deep[df_deep_to_deep.pressure == df_deep_to_deep.pressure.min()].index.values[0]
         df.loc[previous_deep_inflect:shallow_inflect, "profile_index"] = num * 2 - 1
         df.loc[shallow_inflect:deep_inflect, "profile_index"] = num * 2
         previous_deep_inflect = deep_inflect
