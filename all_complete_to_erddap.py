@@ -24,7 +24,7 @@ if __name__ == '__main__':
     df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
     df_reprocess.sort_values("proc_time", inplace=True)
     total = len(df_reprocess)
-    _log.info(f"will send {total} files to erddap}")
+    _log.info(f"will send {total} files to erddap")
     for i, row in df_reprocess.iterrows():
         glider, mission, proc = row.glider, row.mission, row.proc_time
         _log.info(f"Send file {i}/{total}: SEA{glider} M{mission}")
