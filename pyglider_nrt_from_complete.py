@@ -17,8 +17,9 @@ def nrt_proc_from_complete_nc(glider, mission):
     ds = ds.coarsen(time=40, boundary="trim").mean()
     dives = ds.profile_index.values
     keep_array = np.empty(len(dives), dtype=bool)
-    keep_array[:] = False
-    keep_array[dives % 20 < 1.1] = True
+    keep_array[:] = True
+    keep_array[dives % 20 > 1.1] = False
+    keep_array[np.abs(ds.profile_direction) < 0.5] = False
     ds_new = xr.Dataset()
     time = ds.time.values[keep_array]
     ds_new["time"] = time
