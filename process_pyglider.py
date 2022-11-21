@@ -28,7 +28,7 @@ def safe_delete(directories):
 
 
 def set_profile_numbers(ds, profile_bump=0):
-    ds["dive_num"] = ds["dive_num"].astype(int)
+    ds["dive_num"] = np.around(ds["dive_num"]).astype(int)
     df = ds.to_pandas()
     df["profile_index"] = 0
     deepest_points = []
@@ -134,7 +134,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
         ds_variables = list(ds)
         for var in ds_variables:
             if var in int_vars or var[-2:] == "qc":
-                ds[var] = ds[var].astype(int)
+                ds[var] = np.around(ds[var]).astype(int)
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
         max_profile = ds.profile_index.values.max()
         ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})

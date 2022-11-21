@@ -19,7 +19,7 @@ def nrt_proc_from_complete_nc(glider, mission):
     keep_array = np.empty(len(dives), dtype=bool)
     keep_array[:] = True
     keep_array[dives % 20 > 1.1] = False
-    keep_array[np.abs(ds.profile_direction) < 0.5] = False
+    keep_array[np.abs(ds.profile_direction) <= 0.5] = False
     ds_new = xr.Dataset()
     time = ds.time.values[keep_array]
     ds_new["time"] = time
@@ -37,7 +37,7 @@ def nrt_proc_from_complete_nc(glider, mission):
     ds_variables = list(ds_new)
     for var in ds_variables:
         if var in int_vars or var[-2:] == "qc":
-            ds_new[var] = ds_new[var].astype(int)
+            ds_new[var] = np.around(ds_new[var]).astype(int)
     ds_new.attrs["total_dives"] = len(np.unique(ds_new.dive_num.values))
     out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
     if not out_path.exists():
