@@ -30,7 +30,7 @@ def safe_delete(directories):
 def set_profile_numbers(ds, profile_bump=0):
     ds["dive_num"] = np.around(ds["dive_num"]).astype(int)
     df = ds.to_pandas()
-    df["profile_index"] = 0
+    df["profile_index"] = 1
     deepest_points = []
     dive_nums = np.unique(df.dive_num)
     for num in dive_nums:
@@ -42,7 +42,7 @@ def set_profile_numbers(ds, profile_bump=0):
         deepest_points.append(deep_inflect)
 
     previous_deep_inflect = deepest_points[0]
-    df.loc[df.index[0]:previous_deep_inflect, "profile_index"] = 0
+    df.loc[df.index[0]:previous_deep_inflect, "profile_index"] = 1
     num = 0
     for i, deep_inflect in enumerate(deepest_points[1:]):
         num = i + 1
@@ -51,13 +51,13 @@ def set_profile_numbers(ds, profile_bump=0):
             shallow_inflect = df_deep_to_deep.index[int(len(df_deep_to_deep)/2)]
         else:
             shallow_inflect = df_deep_to_deep[df_deep_to_deep.pressure == df_deep_to_deep.pressure.min()].index.values[0]
-        df.loc[previous_deep_inflect:shallow_inflect, "profile_index"] = num * 2 - 1
-        df.loc[shallow_inflect:deep_inflect, "profile_index"] = num * 2
+        df.loc[previous_deep_inflect:shallow_inflect, "profile_index"] = num * 2
+        df.loc[shallow_inflect:deep_inflect, "profile_index"] = num * 2+1
         previous_deep_inflect = deep_inflect
-    df.loc[previous_deep_inflect:df.index[-1], "profile_index"] = num * 2 + 1
+    df.loc[previous_deep_inflect:df.index[-1], "profile_index"] = num * 2 + 2
 
-    df["profile_direction"] = -1
-    df.loc[df.profile_index % 2 == 0, "profile_direction"] = 1
+    df["profile_direction"] = 1
+    df.loc[df.profile_index % 2 == 0, "profile_direction"] = -1
     ds["profile_index"] = df.dive_num.copy()
     ds["profile_direction"] = df.dive_num.copy()
     ds["profile_index"].values = df.profile_index + profile_bump
