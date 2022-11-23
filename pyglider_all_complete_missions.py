@@ -111,7 +111,8 @@ if __name__ == '__main__':
                                            index=[len(df_reprocess)])
                     df_reprocess = pd.concat((df_reprocess, new_row))
         _log.warning(f"end length {len(df_reprocess)}")
-
+        df_reprocess["gm"] = df_reprocess.glider * 10000 + df_reprocess.mission
+        df_reprocess = df_reprocess.groupby("gm").first()
         df_reprocess.sort_values("proc_time", inplace=True)
 
     else:
