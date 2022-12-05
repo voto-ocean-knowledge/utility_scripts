@@ -91,7 +91,7 @@ def read_email_from_gmail():
                     email_subject = email_subject[4:]
                 email_from = msg['from']
                 # If email is from alseamar and subject contains ALARM, make some noise
-                if "administrateur@alseamar-cloud.com" in email_from and "ALARM" in email_subject:
+                if "administrateur@alseamar-cloud.com" in email_from or "calglider" in email_from and "ALARM" in email_subject:
                     sounds(email_subject)
 
 
