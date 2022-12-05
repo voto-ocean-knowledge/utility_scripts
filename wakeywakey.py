@@ -13,7 +13,11 @@ from pydub import AudioSegment
 from pydub.playback import play
 from datetime import datetime
 from pathlib import Path
-
+import os
+import sys
+script_dir = Path(__file__).parent.absolute()
+sys.path.append(str(script_dir))
+os.chdir(script_dir)
 
 with open("email_secrets.json") as json_file:
     secrets = json.load(json_file)
@@ -83,6 +87,8 @@ def read_email_from_gmail():
             if isinstance(response_part, tuple):
                 msg = email.message_from_bytes(response_part[1])
                 email_subject = msg['subject']
+                if "Fw" in email_subject:
+                    email_subject = email_subject[4:]
                 email_from = msg['from']
                 # If email is from alseamar and subject contains ALARM, make some noise
                 if "administrateur@alseamar-cloud.com" in email_from and "ALARM" in email_subject:
