@@ -45,14 +45,23 @@ def recombine(glider_num, mission_num):
     if not sub_timeseries or not sub_gridfiles:
         _log.info("no files to recombine. Stop")
         return
-    mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
+    try:
+        mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
+    except ValueError:
+        _log.warning("mission timeseries combine mf failed. Trying manual")
+        mission_timeseries = xr.open_dataset(sub_timeseries[0])
+        for add_nc in sub_timeseries[1:]:
+            add_ds = xr.open_dataset(add_nc)
+            mission_timeseries = xr.concat((mission_timeseries, add_ds), dim="time")
+            add_ds.close()
+        mission_timeseries = mission_timeseries.sortby("time")
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
     mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory
-    mission_timeseries = None
+    mission_timeseries.close()
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
     _log.info('loaded gridded')
