@@ -58,7 +58,8 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
-    mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
+    mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc",
+                                 encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
     _log.info('wrote mission timeseries')
     # free up memory
     mission_timeseries.close()
