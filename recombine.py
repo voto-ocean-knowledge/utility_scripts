@@ -7,7 +7,6 @@ import xarray as xr
 import numpy as np
 import logging
 
-
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
@@ -47,7 +46,9 @@ def recombine(glider_num, mission_num):
         return
     try:
         mission_timeseries = xr.open_mfdataset(sub_timeseries, combine='by_coords', decode_times=False)
+        encode = False
     except ValueError:
+        encode = True
         _log.warning("mission timeseries combine mf failed. Trying manual")
         mission_timeseries = xr.open_dataset(sub_timeseries[0])
         for add_nc in sub_timeseries[1:]:
@@ -58,8 +59,11 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
-    mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc",
-                                 encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+    if encode:
+        mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc",
+                                     encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+    else:
+        mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory
     mission_timeseries.close()
@@ -85,4 +89,3 @@ if __name__ == '__main__':
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     recombine(args.glider, args.mission)
-
