@@ -7,6 +7,7 @@ import numpy as np
 import polars as pl
 import xarray as xr
 from geocode import get_seas_merged_nav_nc
+from utilities import encode_times
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
@@ -139,9 +140,10 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
                 ds[var] = np.around(ds[var])
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
         max_profile = ds.profile_index.values.max()
-        ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+        ds = encode_times(ds)
+        ds.to_netcdf(tempfile)
         shutil.move(tempfile, outname)
         ds = apply_flags(ds)
-        ds.to_netcdf(tempfile, encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
+        ds.to_netcdf(tempfile)
         ncprocess.make_L0_gridfiles(tempfile, griddir, deploymentyaml)
         return max_profile

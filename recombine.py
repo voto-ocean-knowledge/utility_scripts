@@ -6,6 +6,7 @@ import glob
 import xarray as xr
 import numpy as np
 import logging
+from utilities import encode_times
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
@@ -60,10 +61,8 @@ def recombine(glider_num, mission_num):
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
     if encode:
-        mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc",
-                                     encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'}})
-    else:
-        mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
+        mission_timeseries = encode_times(mission_timeseries)
+    mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory
     mission_timeseries.close()

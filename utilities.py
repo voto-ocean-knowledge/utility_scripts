@@ -42,3 +42,20 @@ def match_input_files(gli_infiles, pld_infiles):
             good_pld_files.append(pld_infiles[i])
     return good_gli_files, good_pld_files
 
+
+def encode_times(ds):
+    if 'units' in ds.time.attrs.keys():
+        ds.time.attrs.pop('units')
+    if 'calendar' in ds.time.attrs.keys():
+        ds.time.attrs.pop('calendar')
+    ds["time"].encoding["units"] = 'seconds since 1970-01-01T00:00:00Z'
+    if 'ad2cp_time' in list(ds):
+        if 'units' in ds.ad2cp_time.attrs.keys():
+            ds.ad2cp_time.attrs.pop('units')
+        if 'calendar' in ds.ad2cp_time.attrs.keys():
+            ds.time.attrs.pop('calendar')
+        min_time_str = str(np.nanmin(ds.ad2cp_time.values))
+        cal_str = f"seconds since {min_time_str[:19]}Z"
+        ds["ad2cp_time"].encoding["units"] = cal_str
+    return ds
+
