@@ -47,7 +47,6 @@ def nrt_proc_from_complete_nc(glider, mission):
         out_path.mkdir(parents=True)
     ds_new = encode_times(ds_new)
     ds_new.to_netcdf(out_path / "mission_timeseries.nc")
-    foo = bar
     return
 
 

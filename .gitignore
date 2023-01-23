@@ -4,3 +4,4 @@ __pycache__/
 email_log.txt
 lastcheck.txt
 message.mp3
+total_datasets.csv
