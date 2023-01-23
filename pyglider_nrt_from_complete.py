@@ -52,8 +52,6 @@ def nrt_proc_from_complete_nc(glider, mission):
 
 
 if __name__ == '__main__':
-    nrt_proc_from_complete_nc(45, 43)
-def hello():
     parser = argparse.ArgumentParser(description='process SX files with pyglider')
     parser.add_argument('glider', type=int, help='glider number, e.g. 70')
     parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
