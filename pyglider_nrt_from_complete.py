@@ -52,8 +52,19 @@ def nrt_proc_from_complete_nc(glider, mission):
     if 'ad2cp_time' in list(ds_new):
         if 'units' in ds_new.ad2cp_time.attrs.keys():
             ds_new.ad2cp_time.attrs.pop('units')
+        if 'calendar' in ds_new.time.attrs.keys():
+            ds_new.time.attrs.pop('calendar')
+        min_time_str = str(np.nanmin(ds_new.ad2cp_time.values))
+        cal_str = f"seconds since {min_time_str[:19]}Z"
+        ds_new.to_netcdf(out_path / "mission_timeseries.nc",
+                         encoding={'time': {'units': 'seconds since 1970-01-01T00:00:00Z'},
+                                   'ad2cp_time': {'units': cal_str,
+                                                  "calendar": "proleptic_gregorian"}},
+                         )
+        return
 
     ds_new.to_netcdf(out_path / "mission_timeseries.nc", encoding={'time': {'units':'seconds since 1970-01-01T00:00:00Z'}})
+    return
 
 
 if __name__ == '__main__':
