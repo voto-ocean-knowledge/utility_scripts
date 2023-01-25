@@ -45,10 +45,11 @@ def adcp_proc_check(download_mission_path):
         shutil.copy(adcp_file, adcp_proc_path)
     if not ad2cp_dir_clean.exists():
         ad2cp_dir_clean.mkdir(parents=True)
-    ntk = adcp_proc_dir / (adcp_clean_fn + ".00000.ntk")
-    if ntk.exists():
-        print(f"ntk to remove {ntk}")
+
+    adcp_proc_4_fn = ad2cp_dir_clean / (adcp_clean_fn + ".00000.nc")
+    if adcp_proc_4_fn.exists():
         return
+
     nc = adcp_proc_dir / (adcp_clean_fn + ".00000.nc")
     try:
         nc_path = list(ad2cp_dir_clean.glob("*.nc"))[0]
@@ -56,12 +57,16 @@ def adcp_proc_check(download_mission_path):
         print(f"no nc found in {pretty_mission_proc}")
         if nc.exists():
             print(f"copying nc file to {pretty_mission_proc}")
-            shutil.copy(nc, ad2cp_dir_clean / (adcp_clean_fn + ".00000.nc"))
+            shutil.copy(nc, adcp_proc_4_fn)
 
     return
 
 
-if __name__ == '__main__':
+def main():
     mission_list = list_missions(to_skip=skip_projects)
     for mission in mission_list:
         adcp_proc_check(mission)
+
+
+if __name__ == '__main__':
+    main()
