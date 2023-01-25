@@ -54,8 +54,7 @@ def encode_times(ds):
             ds.ad2cp_time.attrs.pop('units')
         if 'calendar' in ds.ad2cp_time.attrs.keys():
             ds.time.attrs.pop('calendar')
-        min_time_str = str(np.nanmin(ds.ad2cp_time.values))
-        cal_str = f"seconds since {min_time_str[:19]}Z"
+        cal_str = 'seconds since 1970-01-01T00:00:00Z'
         ds["ad2cp_time"].encoding["units"] = cal_str
     return ds
 
