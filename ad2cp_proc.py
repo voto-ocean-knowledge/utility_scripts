@@ -9,6 +9,31 @@ from utilities import encode_times
 _log = logging.getLogger(__name__)
 
 
+def metadata_extr(attrs, glider_attrs):
+    ds_id = f"adcp_{glider_attrs['dataset_id'][8:]}"
+    extra_attrs = {'dataset_id': ds_id,
+                   'id': ds_id,
+                   'title': ds_id,
+                   "processing_level": "L0 uncorrected ADCP data",
+                   "source": "relative velocity data from a glider mounted ADCP"
+                   }
+    for key, val in extra_attrs.items():
+        attrs[key] = val
+    transfer_attrs = ['AD2CP',  'acknowledgement', 'basin',
+                      'comment', 'contributor_name', 'contributor_role', 'creator_email', 'creator_name', 'creator_url'
+                      , 'date_created', 'date_issued', 'date_modified', 'deployment_end', 'deployment_id',
+                      'deployment_name', 'deployment_start',  'geospatial_lat_max', 'geospatial_lat_min',
+                      'geospatial_lat_units', 'geospatial_lon_max', 'geospatial_lon_min', 'geospatial_lon_units',
+                      'glider_instrument_name', 'glider_model', 'glider_name', 'glider_serial',  'institution',
+                      'license', 'project', 'project_url', 'publisher_email', 'publisher_name', 'publisher_url',
+                       'sea_name', 'summary', 'time_coverage_end', 'time_coverage_start', 'wmo_id',
+                      'disclaimer', 'platform']
+    for key, val in glider_attrs.items():
+        if key in transfer_attrs:
+            attrs[key] = val
+    return attrs
+
+
 def proc_ad2cp_mission(glider, mission):
     # open datasets
     _log.info(f"Start ADCP for SEA{glider} M{mission}")
@@ -21,6 +46,7 @@ def proc_ad2cp_mission(glider, mission):
         _log.warning("timeseries has already been processed with adcp data")
         return
     adcp = xr.open_dataset(adcp_nc)
+    adcp.attrs = metadata_extr(adcp.attrs, ts.attrs)
     # drop unneeded adcp vars:
     unwanted = ["TimeStamp", "MatlabTimeStamp", "Battery"]
     # All adcp variables with a constant value converted to attributes
