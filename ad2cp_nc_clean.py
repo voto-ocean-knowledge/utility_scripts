@@ -1,11 +1,12 @@
 import xarray as xr
 from pathlib import Path
+import subprocess
 from office_check_glider_files import list_missions, skip_projects
 
 base = Path("/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/")
 
 
-def proc(mission_dir):
+def proc(mission_dir, reprocess=False):
     dir_parts = list(mission_dir.parts)
     dir_parts[7] = "4_Processed"
     adcp_dir = Path(*dir_parts) / "ADCP"
@@ -28,7 +29,8 @@ def proc(mission_dir):
             return
         if insize / outsize > 10:
             print(f"warning: resultant file more than 10x smaller {pretty_mission}")
-        return
+        if not reprocess:
+            return
     print(f"opening {pretty_mission} {fn}")
     config = xr.open_dataset(nc, group="Config").attrs
     data = xr.open_dataset(nc, group="Data/Average")
@@ -51,6 +53,11 @@ def proc(mission_dir):
     data.attrs = attrs
     print(f"writing {fout}")
     data.to_netcdf(fout)
+    print("send to pipeline")
+    subprocess.check_call(
+        ['/usr/bin/bash', "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/upload_adcp.sh",
+         str(glider), str(mission), str(fout)])
+    print("finished")
 
 
 def main():
@@ -62,7 +69,7 @@ def main():
     for mission in mission_list:
         if str(mission) in skip_list:
             continue
-        proc(mission)
+        proc(mission, reprocess=True)
 
 
 if __name__ == '__main__':
