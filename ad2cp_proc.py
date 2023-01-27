@@ -4,12 +4,14 @@ from pathlib import Path
 import argparse
 import shutil
 import logging
+import subprocess
 from utilities import encode_times
 _log = logging.getLogger(__name__)
 
 
 def proc_ad2cp_mission(glider, mission):
     # open datasets
+    _log.info(f"Start ADCP for SEA{glider} M{mission}")
     proc_dir = Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/")
     raw_adcp_dir = Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP")
     nc = proc_dir / "timeseries/mission_timeseries.nc"
@@ -91,6 +93,9 @@ def proc_ad2cp_mission(glider, mission):
     ts.close()
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
+    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(args.glider), str(args.mission)])
+    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline.sh", str(args.glider), str(args.mission)])
+    _log.info(f"sent SEA{glider} M{mission} to ERDDAP")
 
 
 if __name__ == '__main__':
