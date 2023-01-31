@@ -25,7 +25,10 @@ def main():
     bad_depths(df_datasets)
     bad_dataset_id(df_datasets)
     delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
+    nrt = df_datasets.index[df_datasets.index.str[:3] == "nrt"]
     num_ds = len(delayed)
+    num_nrt = len(nrt)
+    unit_check(e, nrt[np.random.randint(0, num_nrt-1)])
     profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds-1)])
     sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
     sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
@@ -94,6 +97,9 @@ def bad_dataset_id(df_datasets):
     # Find missions where the dataset ID number doesn't match the name. This indicates the wrong dataset has been loaded
     for dataset_id, row in df_datasets.iterrows():
         name = row["title"]
+        if "adcp" in dataset_id:
+            print("skip namecheck for adcp data")
+            continue
         num_title = int(name.split("-")[0][-2:])
         num_id = int(dataset_id.split("_")[1][-3:])
         if num_id != num_title:
@@ -143,6 +149,18 @@ def sensible_values(e, dataset_id):
             print(f"{dataset_id} bad var {var} minimum {mini}")
         if maxi > high_lim:
             print(f"{dataset_id} bad var {var} maximum {maxi}")
+
+
+def unit_check(e, dataset_id):
+    e.dataset_id = dataset_id
+
+    ds = e.to_xarray()
+    ds = ds.drop_dims("timeseries")
+    for var in list(ds.variables):
+        attrs = ds[var].attrs
+        if var == "oxygen_concentration":
+            if attrs["units"] != "mmol m-3":
+                print(f"bad oxy units {attrs['units']}")
 
 
 def good_times():
