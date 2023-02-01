@@ -126,7 +126,7 @@ def proc_ad2cp_mission(glider, mission):
     ts.close()
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
-    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(args.glider), str(args.mission)])
+    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(glider), str(mission)])
     _log.info(f"sent SEA{glider} M{mission} to ERDDAP")
 
 
