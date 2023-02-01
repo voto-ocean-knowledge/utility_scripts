@@ -35,6 +35,12 @@ def metadata_extr(attrs, glider_attrs):
     return attrs
 
 
+def adcp_data_present(glider, mission):
+    raw_adcp_dir = Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP")
+    adcp_nc = raw_adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
+    return adcp_nc.exists()
+    
+    
 def proc_ad2cp_mission(glider, mission):
     # open datasets
     _log.info(f"Start ADCP for SEA{glider} M{mission}")
@@ -121,7 +127,6 @@ def proc_ad2cp_mission(glider, mission):
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
     subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(args.glider), str(args.mission)])
-    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline.sh", str(args.glider), str(args.mission)])
     _log.info(f"sent SEA{glider} M{mission} to ERDDAP")
 
 

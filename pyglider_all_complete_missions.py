@@ -161,6 +161,10 @@ if __name__ == '__main__':
         from add_profiles import init_db, add_complete_profiles
         init_db()
         add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
+        from ad2cp_proc import proc_ad2cp_mission, adcp_data_present
+        if adcp_data_present(glider, mission):
+            _log.info("processing ADCP data")
+            proc_ad2cp_mission(glider, mission)
         df_reprocess.at[i, "proc_time"] = datetime.datetime.now()
         df_reprocess.at[i, "duration"] = datetime.datetime.now() - start
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
