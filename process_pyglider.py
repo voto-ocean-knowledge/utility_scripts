@@ -116,7 +116,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
         dataset_type = "nrt" if kind == "sub" else "delayed"
         dataset_id = f"{dataset_type}_SEA{glider_num_pad}_M{deployment['metadata']['deployment_id']}"
         deployment['metadata']["dataset_id"] = dataset_id
-        title = f"SEA{str(glider).zfill(3)} mission {str(mission)} {dataset_type} data"
+        title = f"SEA{str(glider).zfill(3)} mission {str(mission).zfill(3)} {dataset_type} data"
         deployment['metadata']["title"] = title
         variables = list(deployment["netcdf_variables"].keys())
         if "keep_variables" in variables:
