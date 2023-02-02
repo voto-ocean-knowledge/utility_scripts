@@ -62,6 +62,7 @@ def proc_ad2cp_mission(glider, mission):
         uniques = np.unique(var)
         if var_name in unwanted:
             adcp = adcp.drop_vars(var_name)
+            continue
         if len(uniques) == 1:
             adcp.attrs[var_name] = uniques[0]
             adcp = adcp.drop_vars(var_name)
