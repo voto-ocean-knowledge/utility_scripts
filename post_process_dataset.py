@@ -18,7 +18,7 @@ def calculate_bbp(ds, beam_angle=117):
     temperature = ds["temperature"].values
     salinity = ds["salinity"].values
     beta_total = ds["backscatter_scaled"].values
-    backscatter_str = ds.backscatter.attrs["standard_name"]
+    backscatter_str = ds["backscatter_scaled"].attrs["standard_name"]
     wavelength = int(re.findall(r'\d+', backscatter_str)[0])
     beta_sw, __, __ = betasw_ZHH2009(temperature, salinity, wavelength, beam_angle)
     beta_p = beta_total - beta_sw
@@ -33,11 +33,10 @@ def calculate_bbp(ds, beam_angle=117):
     bbp = ds["backscatter_scaled"].copy()
     bbp.values = bbp_val
     bbp.attrs = {"units": "m^{-1}",
-                 "name": "backscatter",
                  'observation_type': 'calculated',
                  'standard_name': f'{wavelength}_nm_scattering_of_particles_integrated_over_the_backwards hemisphere',
                  "long_name": f"{wavelength} nm b_bp: scattering of particles integrated over the backwards hemisphere"}
-    ds["particulate backscattering coefficient"] = bbp
+    ds["backscatter"] = bbp
 
     return ds
 
