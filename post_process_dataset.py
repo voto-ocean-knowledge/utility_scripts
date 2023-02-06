@@ -14,6 +14,7 @@ _log = logging.getLogger(__name__)
 
 def calculate_bbp(ds, beam_angle=117):
     # https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf
+    _log.info("processing backscatter")
     temperature = ds["temperature"].values
     salinity = ds["salinity"].values
     beta_total = ds["backscatter_scaled"].values
@@ -42,8 +43,10 @@ def calculate_bbp(ds, beam_angle=117):
 
 
 def post_process(ds):
-    if "backscatter" in list(ds):
+    _log.info("start post process")
+    if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
+    _log.info("complete post process")
     return ds
 
 

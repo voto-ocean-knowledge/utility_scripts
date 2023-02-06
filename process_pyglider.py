@@ -7,6 +7,7 @@ import numpy as np
 import polars as pl
 import xarray as xr
 from geocode import get_seas_merged_nav_nc
+from post_process_dataset import post_process
 from utilities import encode_times
 
 script_dir = pathlib.Path(__file__).parent.absolute()
@@ -142,6 +143,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
                 ds[var] = np.around(ds[var])
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
         max_profile = ds.profile_index.values.max()
+        ds = post_process(ds)
         ds = encode_times(ds)
         ds.to_netcdf(tempfile)
         shutil.move(tempfile, outname)
