@@ -16,7 +16,7 @@ def calculate_bbp(ds, beam_angle=117):
     # https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf
     temperature = ds["temperature"].values
     salinity = ds["salinity"].values
-    beta_total = ds["backscatter"].values
+    beta_total = ds["backscatter_scaled"].values
     backscatter_str = ds.backscatter.attrs["standard_name"]
     wavelength = int(re.findall(r'\d+', backscatter_str)[0])
     beta_sw, __, __ = betasw_ZHH2009(temperature, salinity, wavelength, beam_angle)
@@ -29,10 +29,15 @@ def calculate_bbp(ds, beam_angle=117):
         _log.error(f"Incompatible beam_angle. Allowed values are 117 or 140")
         return
     bbp_val = 2 * np.pi * chi_p * beta_p  # in m-1
-    bbp = ds["backscatter"].copy()
+    bbp = ds["backscatter_scaled"].copy()
     bbp.values = bbp_val
-    bbp.attrs = {"units": "m^{-1}"}
+    bbp.attrs = {"units": "m^{-1}",
+                 "name": "backscatter",
+                 'observation_type': 'calculated',
+                 'standard_name': f'{wavelength}_nm_scattering_of_particles_integrated_over_the_backwards hemisphere',
+                 "long_name": f"{wavelength} nm b_bp: scattering of particles integrated over the backwards hemisphere"}
     ds["particulate backscattering coefficient"] = bbp
+
     return ds
 
 
