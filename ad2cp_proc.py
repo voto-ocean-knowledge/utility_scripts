@@ -39,7 +39,7 @@ def adcp_data_present(glider, mission):
     raw_adcp_dir = Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP")
     adcp_nc = raw_adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
     return adcp_nc.exists()
-    
+
     
 def proc_ad2cp_mission(glider, mission):
     # open datasets
@@ -94,10 +94,21 @@ def proc_ad2cp_mission(glider, mission):
             adcp[var_name] = var_fixed
     adcp = adcp.reset_index(['Amplitude Range', 'Correlation Range', 'Velocity Range'], drop=True)
     # Keep only 3D variables in the ad2cp dataset (time, cell, beam). All others transferred to the glider dataset
+    for_ts = []
     for var_name in list(adcp):
         if "Beam" not in var_name:
-            ts[f"adcp_{var_name}"] = adcp[var_name]
-            adcp = adcp.drop_vars(var_name)
+            for_ts.append(var_name)
+    adcp_for_ts = adcp[for_ts]
+    adcp.drop_vars(for_ts)
+    for var_name in list(adcp_for_ts):
+        adcp_for_ts[f"adcp_{var_name}"] = adcp_for_ts[var_name]
+        adcp_for_ts = adcp_for_ts.drop_vars(var_name)
+
+    ts = xr.merge((ts, adcp_for_ts))
+    ts = encode_times(ts)
+    ts.to_netcdf(proc_dir / "timeseries/mission_timeseries_with_adcp.nc")
+    ts.close()
+
 
     # rearange the AD2CP data into 3D DataArrays. Using the native dtype of the data (32-bit float)
     dimensions = {"time": adcp.time, "cell": adcp.range, "beam": (1, 2, 3, 4)}
@@ -122,9 +133,6 @@ def proc_ad2cp_mission(glider, mission):
         output_path.mkdir(parents=True)
     adcp.to_netcdf(output_path / f"adcp.nc")
     adcp.close()
-    ts = encode_times(ts)
-    ts.to_netcdf(proc_dir / "timeseries/mission_timeseries_with_adcp.nc")
-    ts.close()
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
     subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(glider), str(mission)])
