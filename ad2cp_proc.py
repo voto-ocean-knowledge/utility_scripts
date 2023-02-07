@@ -11,7 +11,7 @@ _log = logging.getLogger(__name__)
 
 def metadata_extr(attrs, glider_attrs):
     ds_id = f"adcp_{glider_attrs['dataset_id'][8:]}"
-    title = f"SEA{str(glider_attrs['glider_serial']).zfill(3)} mission {str(glider_attrs['deployment_id']).zfill(3)} ADCP data"
+    title = f"{glider_attrs['title']}_adcp"
     extra_attrs = {'dataset_id': ds_id,
                    'id': ds_id,
                    'title': title,
