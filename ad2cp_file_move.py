@@ -1,6 +1,5 @@
 from pathlib import Path
 import shutil
-from office_check_glider_files import list_missions, skip_projects
 
 
 def clean_adcp_fn(fn):
@@ -61,12 +60,3 @@ def adcp_proc_check(download_mission_path):
 
     return
 
-
-def main():
-    mission_list = list_missions(to_skip=skip_projects)
-    for mission in mission_list:
-        adcp_proc_check(mission)
-
-
-if __name__ == '__main__':
-    main()
