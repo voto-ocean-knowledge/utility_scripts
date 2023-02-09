@@ -28,14 +28,14 @@ def all_nrt_from_complete(reprocess=True):
             except:
                 _log.warning(f"Could not process {mission_path}")
     _log.info(f"will process {len(glidermissions)} missions")
-    for glider,  mission in glidermissions:
+    for i, (glider,  mission) in enumerate(glidermissions):
         out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
         if out_path.exists() and not reprocess:
             _log.info(f"SEA{glider} M{mission} already exists. Skipping")
             continue
         try:
             nrt_proc_from_complete_nc(glider, mission)
-            _log.info(f"Processed SEA{glider} M{mission}")
+            _log.info(f"{i+1}/{len(glidermissions)}Processed SEA{glider} M{mission}")
         except:
             _log.warning(f"failed with SEA{glider} M{mission}")
 
