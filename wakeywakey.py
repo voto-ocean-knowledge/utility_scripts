@@ -29,7 +29,7 @@ def sounds(text):
     _log.info(f"Will play {text}")
     play(AudioSegment.from_mp3('al.mp3'))
     _log.debug("played first soung")
-    glider, mission, __, __, alarm_code = text.split(" ")
+    __, glider, mission, __, __, alarm_code = text.split(" ")
     message = f"sea {glider[4:-1]} has alarmed with code {alarm_code[6:-1]}. Get up"
     speech = gTTS(text=message, lang="en", tld='com.au')
     speech.save("message.mp3")
