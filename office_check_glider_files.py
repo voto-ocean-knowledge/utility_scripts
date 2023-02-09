@@ -2,6 +2,15 @@ from pathlib import Path
 import pandas as pd
 from itertools import chain
 from ad2cp_file_move import adcp_proc_check
+import sys 
+import os
+import json
+script_dir = Path(__file__).parent.absolute()
+sys.path.append(str(script_dir))
+os.chdir(script_dir)
+
+with open("email_secrets.json") as json_file:
+    secrets = json.load(json_file)
 
 explained_missions = ((67, 15), (61, 63), (56, 27), (66, 31), (45, 58), (61, 48), (45, 37), (45, 54), (44, 48),
                       (55, 16), (63, 40), (66, 45))
@@ -60,7 +69,7 @@ def good_mission(download_mission_path, processed_missions, explained=()):
 
 
 def list_missions(to_skip=()):
-    base = Path("/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/")
+    base = Path(secrets["data_path"])
     projects = list(base.glob("*_*"))
     glider_dirs = []
     for proj in projects:

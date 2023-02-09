@@ -100,7 +100,10 @@ def bad_dataset_id(df_datasets):
         if "adcp" in dataset_id:
             print("skip namecheck for adcp data")
             continue
-        num_title = int(name.split("-")[0][-2:])
+        if " " in name:
+            num_title = int(name[3:6])
+        else:
+            num_title = int(name.split("-")[0][-2:])
         num_id = int(dataset_id.split("_")[1][-3:])
         if num_id != num_title:
             print(name, dataset_id)
