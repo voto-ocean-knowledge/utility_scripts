@@ -69,7 +69,7 @@ def main():
     for mission in mission_list:
         if str(mission) in skip_list:
             continue
-        proc(mission, reprocess=True)
+        proc(mission, reprocess=False)
 
 
 if __name__ == '__main__':
