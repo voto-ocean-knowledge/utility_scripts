@@ -40,32 +40,76 @@ def adcp_data_present(glider, mission):
     adcp_nc = raw_adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
     return adcp_nc.exists()
 
-    
-def proc_ad2cp_mission(glider, mission):
-    # open datasets
-    _log.info(f"Start ADCP for SEA{glider} M{mission}")
-    proc_dir = Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/")
-    raw_adcp_dir = Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP")
-    nc = proc_dir / "timeseries/mission_timeseries.nc"
-    adcp_nc = raw_adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
+
+def get_glider_timeseries(nc):
+    ds = xr.open_dataset(nc)
+    ts = ds[["time", "ad2cp_time"]]
+    return ts
+
+
+def recombine_glider_timeseries(nc, adcp_for_ts, outfile):
     ts = xr.open_dataset(nc)
-    if "ad2cp_time" not in list(ts):
-        _log.warning("timeseries has already been processed with adcp data")
-        return
-    adcp = xr.open_dataset(adcp_nc)
-    adcp.attrs = metadata_extr(adcp.attrs, ts.attrs)
+    ts = xr.merge((ts, adcp_for_ts))
+    ts = encode_times(ts)
+    ts.to_netcdf(outfile)
+    ts.close()
+
+
+def write_3d_adcp(adcp, beam_attrs, output_path):
+    # rearange the AD2CP data into 3D DataArrays. Using the native dtype of the data (32-bit float)
+    dimensions = {"time": adcp.time, "cell": adcp.range, "beam": (1, 2, 3, 4)}
+    for kind in ["Velocity", "Correlation", "Amplitude"]:
+        vel = np.empty((*adcp[f"{kind}Beam1"].values.shape, 4), dtype=type(adcp[f"{kind}Beam1"].values[0, 0]))
+        vel[:] = np.nan
+        for beam in (1, 2, 3, 4):
+            old_var = adcp[f"{kind}Beam{beam}"]
+            vel[:, :, beam - 1] = old_var.values
+            adcp = adcp.drop_vars(f"{kind}Beam{beam}")
+        da_3d = xr.DataArray(data=vel, dims=dimensions)
+        da_3d.attrs = old_var.attrs
+        adcp[kind.lower()] = da_3d
+
+    adcp.assign_coords(beam=("beam", np.array((1, 2, 3, 4))))
+    adcp.beam.attrs = beam_attrs
+
+    adcp = encode_times(adcp)
+    if not output_path.exists():
+        output_path.mkdir(parents=True)
+    adcp.to_netcdf(output_path / f"adcp.nc")
+    adcp.close()
+
+
+def drop_unique_vals(adcp):
     # drop unneeded adcp vars:
     unwanted = ["TimeStamp", "MatlabTimeStamp", "Battery"]
     # All adcp variables with a constant value converted to attributes
     for var_name in list(adcp):
-        var = adcp[var_name].values
-        uniques = np.unique(var)
         if var_name in unwanted:
             adcp = adcp.drop_vars(var_name)
             continue
+        var = adcp[var_name].values
+        uniques = np.unique(var)
         if len(uniques) == 1:
             adcp.attrs[var_name] = uniques[0]
             adcp = adcp.drop_vars(var_name)
+    return adcp
+
+
+def proc_ad2cp_mission(glider, mission):
+    # open datasets
+    _log.info(f"Start ADCP for SEA{glider} M{mission}")
+    raw_adcp_dir = Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP")
+    adcp_nc = raw_adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
+    proc_dir = Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/")
+    nc = proc_dir / "timeseries/mission_timeseries.nc"
+    ts = get_glider_timeseries(nc)
+    if "ad2cp_time" not in list(ts):
+        _log.warning("timeseries has already been processed with adcp data")
+        #return
+    adcp = xr.open_dataset(adcp_nc)
+    adcp.attrs = metadata_extr(adcp.attrs, ts.attrs)
+    adcp = drop_unique_vals(adcp)
+
     # test that beams stay the same throughout the dataset
     unique_beams = np.unique(adcp.Physicalbeam.values, axis=0)
     beam_attrs = adcp.Physicalbeam.attrs
@@ -103,36 +147,11 @@ def proc_ad2cp_mission(glider, mission):
     for var_name in list(adcp_for_ts):
         adcp_for_ts[f"adcp_{var_name}"] = adcp_for_ts[var_name]
         adcp_for_ts = adcp_for_ts.drop_vars(var_name)
-
-    ts = xr.merge((ts, adcp_for_ts))
-    ts = encode_times(ts)
-    ts.to_netcdf(proc_dir / "timeseries/mission_timeseries_with_adcp.nc")
-    ts.close()
-
-
-    # rearange the AD2CP data into 3D DataArrays. Using the native dtype of the data (32-bit float)
-    dimensions = {"time": adcp.time, "cell": adcp.range, "beam": (1, 2, 3, 4)}
-
-    for kind in ["Velocity", "Correlation", "Amplitude"]:
-        vel = np.empty((*adcp[f"{kind}Beam1"].values.shape, 4), dtype=type(adcp[f"{kind}Beam1"].values[0, 0]))
-        vel[:] = np.nan
-        for beam in (1, 2, 3, 4):
-            old_var = adcp[f"{kind}Beam{beam}"]
-            vel[:, :, beam - 1] = old_var.values
-            adcp = adcp.drop_vars(f"{kind}Beam{beam}")
-        da_3d = xr.DataArray(data=vel, dims=dimensions)
-        da_3d.attrs = old_var.attrs
-        adcp[kind.lower()] = da_3d
-
-    adcp.assign_coords(beam=("beam", np.array((1, 2, 3, 4))))
-    adcp.beam.attrs = beam_attrs
-
-    adcp = encode_times(adcp)
+    outfile = proc_dir / "timeseries/mission_timeseries_with_adcp.nc"
+    recombine_glider_timeseries(nc, adcp_for_ts, outfile)
     output_path = proc_dir / "ADCP"
-    if not output_path.exists():
-        output_path.mkdir(parents=True)
-    adcp.to_netcdf(output_path / f"adcp.nc")
-    adcp.close()
+    write_3d_adcp(adcp, beam_attrs, output_path)
+
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
     subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(glider), str(mission)])
