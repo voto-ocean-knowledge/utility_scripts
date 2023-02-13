@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 import logging
 import argparse
-from utilities import encode_times, find_best_dtype
+from utilities import encode_times, set_best_dtype
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/nrt_from_complete.log',
                     filemode='a',
@@ -40,7 +40,7 @@ def nrt_proc_from_complete_nc(glider, mission):
             ds_new[var] = np.around(ds_new[var]).astype(int)
         elif var[-3:] == "raw":
             ds_new[var] = np.around(ds_new[var])
-    ds_new = find_best_dtype(ds_new)
+    ds_new = set_best_dtype(ds_new)
     ds_new.attrs["total_dives"] = len(np.unique(ds_new.dive_num.values))
     out_path = Path(f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/timeseries")
     if not out_path.exists():
