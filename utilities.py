@@ -83,7 +83,7 @@ def set_best_dtype(ds):
         new_dtype = find_best_dtype(var_name, da)
         if new_dtype == input_dtype:
             continue
-        _log.info(f"{var_name} input dtype {input_dtype} change to {new_dtype}")
+        _log.debug(f"{var_name} input dtype {input_dtype} change to {new_dtype}")
         da_new = da.astype(new_dtype)
         ds = ds.drop_vars(var_name)
         ds[var_name] = da_new

@@ -35,7 +35,7 @@ def all_nrt_from_complete(reprocess=True):
             continue
         try:
             nrt_proc_from_complete_nc(glider, mission)
-            _log.info(f"{i+1}/{len(glidermissions)}Processed SEA{glider} M{mission}")
+            _log.info(f"{i+1}/{len(glidermissions)} Processed SEA{glider} M{mission}")
         except:
             _log.warning(f"failed with SEA{glider} M{mission}")
 
