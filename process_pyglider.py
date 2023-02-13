@@ -8,7 +8,7 @@ import polars as pl
 import xarray as xr
 from geocode import get_seas_merged_nav_nc
 from post_process_dataset import post_process
-from utilities import encode_times
+from utilities import encode_times, set_best_dtype
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
@@ -139,6 +139,7 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
                 ds[var] = np.around(ds[var]).astype(int)
             elif var[-3:] == "raw":
                 ds[var] = np.around(ds[var])
+        ds = set_best_dtype(ds)
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
         max_profile = ds.profile_index.values.max()
         ds = post_process(ds)
