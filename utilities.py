@@ -88,5 +88,5 @@ def set_best_dtype(ds):
         ds = ds.drop_vars(var_name)
         ds[var_name] = da_new
     bytes_out = ds.nbytes
-    print(f"Space saved by dtype downgrade: {int(100 * (bytes_in - bytes_out) / bytes_in)} %")
+    _log.info(f"Space saved by dtype downgrade: {int(100 * (bytes_in - bytes_out) / bytes_in)} %")
     return ds
