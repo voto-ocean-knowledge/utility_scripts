@@ -6,7 +6,7 @@ import glob
 import xarray as xr
 import numpy as np
 import logging
-from utilities import encode_times
+from utilities import encode_times, set_best_dtype
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
@@ -62,6 +62,7 @@ def recombine(glider_num, mission_num):
     mission_timeseries.attrs["total_dives"] = total_dives
     if encode:
         mission_timeseries = encode_times(mission_timeseries)
+    mission_timeseries = set_best_dtype(mission_timeseries)
     mission_timeseries.to_netcdf(l0tsdir + "mission_timeseries.nc")
     _log.info('wrote mission timeseries')
     # free up memory

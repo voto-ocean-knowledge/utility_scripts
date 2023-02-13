@@ -7,7 +7,7 @@ import xarray as xr
 from pathlib import Path
 import shutil
 
-from utilities import encode_times
+from utilities import encode_times, set_best_dtype
 
 _log = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     nc_path = Path(f"/data/data_l0_pyglider/{mtype}/SEA{args.glider}/M{args.mission}/timeseries/mission_timeseries.nc")
     ds_in = xr.open_dataset(nc_path)
     post_process(ds_in)
+    ds_in = set_best_dtype(ds_in)
     ds_in = encode_times(ds_in)
     tempfile = f"/data/tmp/SEA{args.glider}_M{args.mission}"
     ds_in.to_netcdf(tempfile)

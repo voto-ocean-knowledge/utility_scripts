@@ -5,7 +5,7 @@ import argparse
 import shutil
 import logging
 import subprocess
-from utilities import encode_times
+from utilities import encode_times, set_best_dtype
 _log = logging.getLogger(__name__)
 
 
@@ -49,7 +49,13 @@ def get_glider_timeseries(nc):
 
 def recombine_glider_timeseries(nc, adcp_for_ts, outfile):
     ts = xr.open_dataset(nc)
+    for var_name in list(ts):
+        if var_name == "ad2cp_time":
+            ts["adcp_time"] = ts["ad2cp_time"]
+        if "ad2cp" in var_name:
+            ts = ts.drop_vars(var_name)
     ts = xr.merge((ts, adcp_for_ts))
+    ts = set_best_dtype(ts)
     ts = encode_times(ts)
     ts.to_netcdf(outfile)
     ts.close()
@@ -71,7 +77,8 @@ def write_3d_adcp(adcp, beam_attrs, output_path):
 
     adcp.assign_coords(beam=("beam", np.array((1, 2, 3, 4))))
     adcp.beam.attrs = beam_attrs
-
+    adcp = adcp[["correlation", "amplitude", "velocity"]]
+    adcp = set_best_dtype(adcp)
     adcp = encode_times(adcp)
     if not output_path.exists():
         output_path.mkdir(parents=True)
@@ -105,7 +112,7 @@ def proc_ad2cp_mission(glider, mission):
     ts = get_glider_timeseries(nc)
     if "ad2cp_time" not in list(ts):
         _log.warning("timeseries has already been processed with adcp data")
-        #return
+        return
     adcp = xr.open_dataset(adcp_nc)
     adcp.attrs = metadata_extr(adcp.attrs, ts.attrs)
     adcp = drop_unique_vals(adcp)
@@ -125,10 +132,7 @@ def proc_ad2cp_mission(glider, mission):
     adcp = adcp.reindex(time=ts_adcp_time, method="nearest")
     adcp = adcp.assign_coords(time=ts_time)
     # TODO tests here that the alignment of timestamps hasn't screwed things up
-    # Drop the ad2cp data transmitted to the pld1 board during the mission
-    for var_name in list(ts):
-        if "ad2cp" in var_name:
-            ts = ts.drop_vars(var_name)
+
     # Standardise the dimension names of the variables that are on a range
     for var_name in list(adcp):
         var = adcp[var_name]
