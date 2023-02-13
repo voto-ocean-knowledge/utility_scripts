@@ -82,7 +82,7 @@ def batched_process(glider, mission):
     _log.info('Batched processing complete')
 
 
-if __name__ == '__main__':
+def main():
     logf = f'/data/log/complete_mission_reprocess.log'
     logging.basicConfig(filename=logf,
                         filemode='a',
@@ -170,3 +170,7 @@ if __name__ == '__main__':
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         _log.info("Finished add to database")
         _log.info(f"Complete Reprocessing SEA{glider} M{mission}")
+
+
+if __name__ == '__main__':
+    main()
