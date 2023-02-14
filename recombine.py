@@ -72,6 +72,7 @@ def recombine(glider_num, mission_num):
     mission_timeseries.close()
 
     mission_grid = xr.open_mfdataset(sub_gridfiles, combine='by_coords', decode_times=False)
+    mission_grid.attrs["basin"] = basin
     _log.info('loaded gridded')
     mission_grid.to_netcdf(griddir + "mission_grid.nc")
     _log.info('wrote gridded')
