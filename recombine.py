@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 import logging
 from utilities import encode_times, set_best_dtype
+from geocode import locs_to_seas
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
@@ -60,6 +61,8 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
+    basin = locs_to_seas(mission_timeseries["longitude"].values, mission_timeseries["latitude"].values)
+    mission_timeseries.attrs["basin"] = basin
     if encode:
         mission_timeseries = encode_times(mission_timeseries)
     mission_timeseries = set_best_dtype(mission_timeseries)
