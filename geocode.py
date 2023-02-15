@@ -7,11 +7,14 @@ import pathlib
 import argparse
 import shutil
 import numpy as np
+from itertools import chain
 from collections import Counter
 _log = logging.getLogger(__name__)
-from itertools import chain
 
-df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
+comment = "Data points for this variable that fall within Swedish territorial seas have been removed." \
+          " Territorial seas extents from:" \
+          "Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Territorial Seas (12NM)," \
+          " version 3. Available online at http://www.marineregions.org/. https://doi.org/10.14284/387"
 
 
 def nmea2deg(nmea):
@@ -38,6 +41,7 @@ def get_seas_merged_nav_nc(navfile):
 
 
 def locs_to_seas(lon, lat):
+    df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
     df_glider = pd.DataFrame({"lon": lon, "lat": lat})
     df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.lon, df_glider.lat))
     df_glider = df_glider.set_crs(epsg=4326)
@@ -83,6 +87,95 @@ def update_ncs(glider, mission, sub_dir):
     _log.info(f"Updated all ncs in {root_dir}")
     _log.info("Success! added basin to all ncs")
 
+
+def geocode_by_dives(ds):
+    # read in shapefiles
+    df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
+    df_12nm = gp.read_file("/data/third_party/eez_12nm/eez_12nm.shp")
+    # extend the Swedish territorial waters by a buffer lenght
+    df_12nm_extend = df_12nm.copy()
+    df_12nm_extend = df_12nm_extend.to_crs('epsg:3152')
+    buffer_length_in_meters = 5 * 1000 * 1.82
+    df_12nm_extend['geometry'] = df_12nm_extend.geometry.buffer(buffer_length_in_meters)
+    df_12nm_extend_in = df_12nm_extend.to_crs(epsg=4326)
+    # df_12nm_extend_in.to_file("data/sweden_12nm_buffer_5nm.json", driver="GeoJSON", index=False)
+    # Create minimal dataset and group it by dives
+    ds = ds[["longitude", "latitude", "dive_num"]]
+    df_glider = ds.to_pandas().groupby("dive_num").mean()
+    df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.longitude, df_glider.latitude))
+    # Align crs and check which dives fall within Swedish 12 nm waters and helcom polygons
+    df_glider = df_glider.set_crs(epsg=4326)
+    df_helcom = df_helcom.to_crs(df_glider.crs)
+    df_helcom = gp.sjoin(df_helcom, df_glider, predicate='contains')
+    df_12nm = df_12nm.to_crs(df_glider.crs)
+    df_12nm = gp.sjoin(df_12nm, df_glider, predicate='contains')
+    df_12nm_extend = df_12nm_extend_in.to_crs(df_glider.crs)
+    df_12nm_extend = gp.sjoin(df_12nm_extend, df_glider, predicate='contains')
+    df_glider.index.rename("index", inplace=True)
+    df_glider["dive_num"] = df_glider.index
+    df_12nm_id = df_12nm[["index_right", "sovereign1"]]
+    df_helcom_id = df_helcom[["index_right", "Name"]]
+    df_12nm_extend_id = df_12nm_extend[["index_right", "sovereign1"]]
+    df_12nm_extend_id = df_12nm_extend_id.rename(columns={"index_right": "index_right_extend",
+                                                          "sovereign1": "sovereign1_extend"})
+    # merge the resulting dataframes and check that dives numbers still align
+    df_glider = pd.merge(df_glider, df_12nm_id, left_on="dive_num", right_on="index_right", how="left")
+    df_glider = pd.merge(df_glider, df_helcom_id, left_on="dive_num", right_on="index_right", how="left")
+    df_glider = pd.merge(df_glider, df_12nm_extend_id, left_on="dive_num", right_on="index_right_extend", how="left")
+    assert not (df_glider.dive_num - df_glider.index_right_x).any()
+    assert not (df_glider.dive_num - df_glider.index_right_y).any()
+    assert not (df_glider.dive_num - df_glider.index_right_extend).any()
+    # clean up dataframe before returning
+    df_glider.drop(["index_right_x", "index_right_y", "index_right_extend"], axis=1, inplace=True)
+    df_glider.rename(columns={"Name": "basin"}, inplace=True)
+    df_glider.loc[df_glider.sovereign1 != "Sweden", "sovereign1"] = "International waters"
+    df_glider.loc[df_glider.sovereign1_extend != "Sweden", "sovereign1_extend"] = "International waters"
+    return df_glider
+
+
+def identify_territorial_dives(ds, df_geocode):
+    international_dives = df_geocode.loc[df_geocode.sovereign1_extend == "International waters", "dive_num"]
+    good_dives = np.empty((np.size(ds.dive_num.values)), dtype=bool)
+    good_dives[:] = False
+    good_dives[np.isin(ds.dive_num, international_dives)] = True
+    return good_dives
+
+
+def filter_territorial_data(ds):
+    df_geocode = geocode_by_dives(ds)
+    good_dives = identify_territorial_dives(ds, df_geocode)
+    if all(good_dives):
+        _log.info("No dives found within Swedish territorial waters")
+        return ds
+    else:
+        percent_remove = sum(~good_dives) / len(good_dives) * 100
+        _log.warning(f"Dives found within Swedish territorial seas. Will remove {int(percent_remove)} % of data")
+    flag_terms = ["adcp", "ad2cp", "altitude", "altimeter", "altim", "velocity", "amplitude"]
+    for var_name in list(ds):
+        if not any(substring in var_name.lower() for substring in flag_terms):
+            continue
+        if ds[var_name].dtype == np.dtype('<M8[ns]'):
+            _log.warning(f"Will not flag territorial seas for {var_name}. dtype is {ds[var_name].dtype}")
+            continue
+        _log.info(f"Flag territorial seas for {var_name}")
+        ds[var_name].values[~good_dives] = np.nan
+        ds[var_name].attrs["comment"] = f'{ds[var_name].attrs["comment"]}. {comment}'
+    return ds
+
+
+def filter_adcp_data(ds, good_dives):
+    if all(good_dives):
+        _log.info("No dives found within Swedish territorial waters")
+        return ds
+    else:
+        percent_remove = sum(~good_dives) / len(good_dives) * 100
+        _log.warning(f"Dives found within Swedish territorial seas. Will remove {int(percent_remove)} % of data")
+    for var_name in list(ds):
+        _log.info(f"Flag territorial seas for {var_name}")
+        ds[var_name].values[~good_dives, :, :] = np.nan
+        ds[var_name].attrs["comment"] = f'{ds[var_name].attrs["comment"]}. {comment}'
+    return ds
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='add sub basin data to netcdf files')

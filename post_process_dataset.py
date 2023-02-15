@@ -6,9 +6,8 @@ import logging
 import xarray as xr
 from pathlib import Path
 import shutil
-
 from utilities import encode_times, set_best_dtype
-
+from geocode import filter_territorial_data
 _log = logging.getLogger(__name__)
 
 
@@ -47,6 +46,7 @@ def calculate_bbp(ds, beam_angle=117):
 
 def post_process(ds):
     _log.info("start post process")
+    ds = filter_territorial_data(ds)
     if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
     _log.info("complete post process")

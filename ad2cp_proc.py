@@ -6,6 +6,7 @@ import shutil
 import logging
 import subprocess
 from utilities import encode_times, set_best_dtype
+import geocode
 _log = logging.getLogger(__name__)
 
 
@@ -20,14 +21,14 @@ def metadata_extr(attrs, glider_attrs):
                    }
     for key, val in extra_attrs.items():
         attrs[key] = val
-    transfer_attrs = ['AD2CP',  'acknowledgement', 'basin',
-                      'comment', 'contributor_name', 'contributor_role', 'creator_email', 'creator_name', 'creator_url'
-                      , 'date_created', 'date_issued', 'date_modified', 'deployment_end', 'deployment_id',
-                      'deployment_name', 'deployment_start',  'geospatial_lat_max', 'geospatial_lat_min',
+    transfer_attrs = ['AD2CP', 'acknowledgement', 'basin',
+                      'comment', 'contributor_name', 'contributor_role', 'creator_email', 'creator_name', 'creator_url',
+                      'date_created', 'date_issued', 'date_modified', 'deployment_end', 'deployment_id',
+                      'deployment_name', 'deployment_start', 'geospatial_lat_max', 'geospatial_lat_min',
                       'geospatial_lat_units', 'geospatial_lon_max', 'geospatial_lon_min', 'geospatial_lon_units',
-                      'glider_instrument_name', 'glider_model', 'glider_name', 'glider_serial',  'institution',
+                      'glider_instrument_name', 'glider_model', 'glider_name', 'glider_serial', 'institution',
                       'license', 'project', 'project_url', 'publisher_email', 'publisher_name', 'publisher_url',
-                       'sea_name', 'summary', 'time_coverage_end', 'time_coverage_start', 'wmo_id',
+                      'sea_name', 'summary', 'time_coverage_end', 'time_coverage_start', 'wmo_id',
                       'disclaimer', 'platform']
     for key, val in glider_attrs.items():
         if key in transfer_attrs:
@@ -43,7 +44,7 @@ def adcp_data_present(glider, mission):
 
 def get_glider_timeseries(nc):
     ds = xr.open_dataset(nc)
-    ts = ds[["time", "ad2cp_time"]]
+    ts = ds[["time", "ad2cp_time", "longitude", "latitude", "dive_num"]]
     return ts
 
 
@@ -61,8 +62,8 @@ def recombine_glider_timeseries(nc, adcp_for_ts, outfile):
     ts.close()
 
 
-def write_3d_adcp(adcp, beam_attrs, output_path):
-    # rearange the AD2CP data into 3D DataArrays. Using the native dtype of the data (32-bit float)
+def write_3d_adcp(adcp, beam_attrs, output_path, good_dives):
+    # rearrange the AD2CP data into 3D DataArrays. Using the native dtype of the data (32-bit float)
     dimensions = {"time": adcp.time, "cell": adcp.range, "beam": (1, 2, 3, 4)}
     for kind in ["Velocity", "Correlation", "Amplitude"]:
         vel = np.empty((*adcp[f"{kind}Beam1"].values.shape, 4), dtype=type(adcp[f"{kind}Beam1"].values[0, 0]))
@@ -73,11 +74,14 @@ def write_3d_adcp(adcp, beam_attrs, output_path):
             adcp = adcp.drop_vars(f"{kind}Beam{beam}")
         da_3d = xr.DataArray(data=vel, dims=dimensions)
         da_3d.attrs = old_var.attrs
-        adcp[kind.lower()] = da_3d
+        if "comment" not in da_3d.attrs.keys():
+            da_3d.attrs["comment"] = ""
+        adcp[f"adcp_{kind.lower()}"] = da_3d
 
     adcp.assign_coords(beam=("beam", np.array((1, 2, 3, 4))))
     adcp.beam.attrs = beam_attrs
-    adcp = adcp[["correlation", "amplitude", "velocity"]]
+    adcp = adcp[["adcp_correlation", "adcp_amplitude", "adcp_velocity"]]
+    adcp = geocode.filter_adcp_data(adcp, good_dives)
     adcp = set_best_dtype(adcp)
     adcp = encode_times(adcp)
     if not output_path.exists():
@@ -147,18 +151,24 @@ def proc_ad2cp_mission(glider, mission):
         if "Beam" not in var_name:
             for_ts.append(var_name)
     adcp_for_ts = adcp[for_ts]
-    adcp.drop_vars(for_ts)
+    adcp = adcp.drop_vars(for_ts)
     for var_name in list(adcp_for_ts):
         adcp_for_ts[f"adcp_{var_name}"] = adcp_for_ts[var_name]
         adcp_for_ts = adcp_for_ts.drop_vars(var_name)
     outfile = proc_dir / "timeseries/mission_timeseries_with_adcp.nc"
     recombine_glider_timeseries(nc, adcp_for_ts, outfile)
     output_path = proc_dir / "ADCP"
-    write_3d_adcp(adcp, beam_attrs, output_path)
+    ts_min = ts[["dive_num"]]
+    adcp_min = adcp_for_ts[["adcp_Status"]]
+    ts_out = xr.merge((adcp_min, ts_min), join="left")
+    df_geocode = geocode.geocode_by_dives(ts_out)
+    good_dives = geocode.identify_territorial_dives(ts_out, df_geocode)
+    write_3d_adcp(adcp, beam_attrs, output_path, good_dives)
 
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
-    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(glider), str(mission)])
+    subprocess.check_call(
+        ['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline_adcp.sh", str(glider), str(mission)])
     _log.info(f"sent SEA{glider} M{mission} to ERDDAP")
 
 
