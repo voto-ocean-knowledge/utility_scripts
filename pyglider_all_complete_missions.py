@@ -101,7 +101,7 @@ def main():
                 glider = int(glider_path.parts[-1][3:])
                 mission = int(mission_path.parts[-1][1:])
                 a = [np.logical_and(df_reprocess.glider == glider, df_reprocess.mission == mission)]
-                if not df_reprocess.index[tuple(a)].any():
+                if not sum(sum(a)):
                     _log.warning(f"new {mission_path}")
                     nc_file = list((mission_path / "timeseries").glob('*.nc'))[0]
                     nc_time = nc_file.lstat().st_mtime

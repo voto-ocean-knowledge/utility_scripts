@@ -128,7 +128,7 @@ def profile_num_vs_dive_num(e, dataset_id):
         print("datasets not sorted by time")
     profiles = len(np.unique(ds.profile_num)) 
     dives = len(np.unique(ds.dive_num))
-    if not profiles / 2 == dives:
+    if abs(profiles / 2 - dives) > 3:
         print(f"missmatch between {dataset_id} profile_num {profiles} and dive_num {dives} ({dives*2})")
 
 
