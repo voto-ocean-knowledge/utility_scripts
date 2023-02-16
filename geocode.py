@@ -150,7 +150,8 @@ def filter_territorial_data(ds):
     else:
         percent_remove = sum(~good_dives) / len(good_dives) * 100
         _log.warning(f"Dives found within Swedish territorial seas. Will remove {int(percent_remove)} % of data")
-    flag_terms = ["adcp", "ad2cp", "altitude", "altimeter", "altim", "velocity", "amplitude"]
+    flag_terms = ["adcp", "ad2cp", "altitude", "altimeter", "altim", "velocity", "amplitude", "bathy", "bathymetry",
+                  "seafloor"]
     for var_name in list(ds):
         if not any(substring in var_name.lower() for substring in flag_terms):
             continue

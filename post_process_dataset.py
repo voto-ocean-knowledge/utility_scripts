@@ -44,8 +44,42 @@ def calculate_bbp(ds, beam_angle=117):
     return ds
 
 
+def vertical_distance_from_altimeter(altimeter, pitch_glider, roll):
+    pitch_altimeter = pitch_glider + 20
+    vertical_distance = np.cos(np.deg2rad(pitch_altimeter)) * np.cos(np.deg2rad(roll)) * altimeter
+    return vertical_distance
+
+
+def process_altimeter(ds):
+    """
+    From the seaexploer manual: the angle of the altimeter is 20 degrees, such that it is vertical when the glider
+    is pitched at 20 degrees during the dive.
+    :param ds:
+    :return: ds with additional bathymetry variable
+    """
+    if "altimeter" not in list(ds):
+        _log.warning("No altimeter data found")
+        return ds
+    altim_raw = ds["altimeter"].values
+    altim = altim_raw.copy()
+    altim[altim_raw <= 0] = np.nan
+    bathy_from_altimeter = vertical_distance_from_altimeter(altim, ds["pitch"].values, ds["roll"].values)
+    vertical_distance_to_seafloor = ds["altimeter"].copy()
+    vertical_distance_to_seafloor.values = bathy_from_altimeter
+    attrs = vertical_distance_to_seafloor.attrs
+    attrs["long_name"] = "vertical distance from glider to seafloor"
+    attrs["standard_name"] = "vertical_distance_to_seafloor"
+    attrs["comment"] = "Distance to the seafloor is calculated from the glider altimeter (see altimeter variable)," \
+                       " which is oriented at 20 degrees from the vertical such that it is vertical when the glider " \
+                       "is pitched downwards at 20 degrees."
+    vertical_distance_to_seafloor.attrs = attrs
+    ds["vertical_distance_to_seafloor"] = vertical_distance_to_seafloor
+    return ds
+
+
 def post_process(ds):
     _log.info("start post process")
+    ds = process_altimeter(ds)
     ds = filter_territorial_data(ds)
     if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
