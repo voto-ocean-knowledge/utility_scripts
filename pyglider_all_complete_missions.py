@@ -140,7 +140,7 @@ def main():
         glider, mission, proc = row.glider, row.mission, row.proc_time
         _log.info(f"Start Reprocessing SEA{glider} M{mission}")
         _log.info(f"increment proc time by 1 day")
-        df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(hours=3)
+        df_reprocess.at[i, "proc_time"] = proc + datetime.timedelta(hours=6)
         df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/clean_mission.sh", str(glider), str(mission)])
 

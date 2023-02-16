@@ -62,7 +62,7 @@ def recombine(glider_num, mission_num):
     _log.info('loaded timeseries')
     total_dives = len(np.unique(mission_timeseries.dive_num.values))
     mission_timeseries.attrs["total_dives"] = total_dives
-    basin = locs_to_seas(mission_timeseries["longitude"].values, mission_timeseries["latitude"].values)
+    basin = locs_to_seas(mission_timeseries["longitude"].values[::10000], mission_timeseries["latitude"].values[::10000])
     mission_timeseries.attrs["basin"] = basin
     mission_timeseries = post_process_dataset.post_process(mission_timeseries)
     if encode:
