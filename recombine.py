@@ -6,6 +6,7 @@ import glob
 import xarray as xr
 import numpy as np
 import logging
+import post_process_dataset
 from utilities import encode_times, set_best_dtype
 from geocode import locs_to_seas
 
@@ -63,6 +64,7 @@ def recombine(glider_num, mission_num):
     mission_timeseries.attrs["total_dives"] = total_dives
     basin = locs_to_seas(mission_timeseries["longitude"].values, mission_timeseries["latitude"].values)
     mission_timeseries.attrs["basin"] = basin
+    mission_timeseries = post_process_dataset.post_process(mission_timeseries)
     if encode:
         mission_timeseries = encode_times(mission_timeseries)
     mission_timeseries = set_best_dtype(mission_timeseries)

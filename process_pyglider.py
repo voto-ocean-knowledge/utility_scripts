@@ -139,10 +139,12 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
                 ds[var] = np.around(ds[var]).astype(int)
             elif var[-3:] == "raw":
                 ds[var] = np.around(ds[var])
+        if "tmp/subs/" not in str(profiledir):
+            # don't post process before recombine
+            ds = post_process(ds)
         ds = set_best_dtype(ds)
         ds = set_profile_numbers(ds, profile_bump=profile_bump)
         max_profile = ds.profile_index.values.max()
-        ds = post_process(ds)
         ds = encode_times(ds)
         ds.to_netcdf(tempfile)
         shutil.move(tempfile, outname)
