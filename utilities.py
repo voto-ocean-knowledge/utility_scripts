@@ -49,13 +49,12 @@ def encode_times(ds):
     if 'calendar' in ds.time.attrs.keys():
         ds.time.attrs.pop('calendar')
     ds["time"].encoding["units"] = 'seconds since 1970-01-01T00:00:00Z'
-    if 'ad2cp_time' in list(ds):
-        if 'units' in ds.ad2cp_time.attrs.keys():
-            ds.ad2cp_time.attrs.pop('units')
-        if 'calendar' in ds.ad2cp_time.attrs.keys():
-            ds.time.attrs.pop('calendar')
-        cal_str = 'seconds since 1970-01-01T00:00:00Z'
-        ds["ad2cp_time"].encoding["units"] = cal_str
+    for var_name in list(ds):
+        if "time" in var_name.lower() and not var_name == "time":
+            for drop_attr in ['units', 'calendar', 'dtype']:
+                if drop_attr in ds[var_name].attrs.keys():
+                    ds[var_name].attrs.pop(drop_attr)
+            ds[var_name].encoding = ds["time"].encoding
     return ds
 
 
