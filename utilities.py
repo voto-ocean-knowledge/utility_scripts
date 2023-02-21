@@ -1,5 +1,6 @@
 import re
 import numpy as np
+import pandas as pd
 import logging
 _log = logging.getLogger(__name__)
 
@@ -89,3 +90,16 @@ def set_best_dtype(ds):
     bytes_out = ds.nbytes
     _log.info(f"Space saved by dtype downgrade: {int(100 * (bytes_in - bytes_out) / bytes_in)} %")
     return ds
+
+
+def ctd_sampling_period(glider, mission):
+    # Get sampling period of CTD in seconds for a given glider mission
+    fn = f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/sea{str(glider).zfill(3)}.{mission}.pld1.raw.10.gz"
+    df = pd.read_csv(fn, sep=";", dayfirst=True, parse_dates=["PLD_REALTIMECLOCK"])
+    if "LEGATO_TEMPERATURE" in list(df):
+        df = df.dropna(subset=["LEGATO_TEMPERATURE"])
+    else:
+        df = df.dropna(subset=["GPCTD_TEMPERATURE"])    
+    time_diff = df["PLD_REALTIMECLOCK"].diff().median()
+    seconds = time_diff.microseconds / 1e6
+    return seconds
