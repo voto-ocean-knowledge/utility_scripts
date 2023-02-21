@@ -62,13 +62,7 @@ def proc(mission_dir, reprocess=False):
 
 def main():
     mission_list = list_missions(to_skip=skip_projects)
-    skip_list =["/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/6_SAMBA_003/1_Downloaded/SEA063_PLD089/SEA063_M24",
-                "/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/6_SAMBA_003/1_Downloaded/SEA045_PLD069/SEA045_M36",
-                "/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/7_SAMBA_004/1_Downloaded/SEA056_PLD070/SEA056_M40",]
-    print(f"Failing and skipping these missions: {skip_list}")
     for mission in mission_list:
-        if str(mission) in skip_list:
-            continue
         proc(mission, reprocess=False)
 
 
