@@ -19,12 +19,12 @@ def compute_glider_stats():
             a = [np.logical_and(df_stats.glider == glider, df_stats.mission == mission)]
             if sum(sum(a)):
                 continue
-            new_row = pd.DataFrame({"glider": glider, "mission": mission,
-                                    "legato_freq": legato_sampling_freq},
-                                   index=[len(df_stats)])
-            df_stats = pd.concat((df_stats, new_row))
             try:
                 legato_sampling_freq = utilities.ctd_sampling_period(glider, mission)
+                new_row = pd.DataFrame({"glider": glider, "mission": mission,
+                                        "legato_freq": legato_sampling_freq},
+                                       index=[len(df_stats)])
+                df_stats = pd.concat((df_stats, new_row))
             except:
                 print(f"fail for SEA{glider} M{mission}")
     df_stats.to_csv('/home/pipeline/stats.csv', index=False)
@@ -32,4 +32,3 @@ def compute_glider_stats():
 
 if __name__ == '__main__':
     compute_glider_stats()
-    
