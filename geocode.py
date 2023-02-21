@@ -14,7 +14,7 @@ _log = logging.getLogger(__name__)
 comment = "Data points for this variable that fall within Swedish territorial seas have been removed." \
           " Territorial seas extents from:" \
           "Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Territorial Seas (12NM)," \
-          " version 3. Available online at http://www.marineregions.org/. https://doi.org/10.14284/387"
+          " version 3. Available online at http://www.marineregions.org/. https://doi.org/10.14284/387."
 
 
 def nmea2deg(nmea):
@@ -91,14 +91,14 @@ def update_ncs(glider, mission, sub_dir):
 def geocode_by_dives(ds):
     # read in shapefiles
     df_helcom = gp.read_file("/data/third_party/helcom_plus_skag/helcom_plus_skag.shp")
-    df_12nm = gp.read_file("/data/third_party/eez_12nm/eez_12nm.shp")
+    df_12nm = gp.read_file("/data/third_party/eez_12nm/eez_12nm_filled.geojson")
     # extend the Swedish territorial waters by a buffer lenght
     df_12nm_extend = df_12nm.copy()
     df_12nm_extend = df_12nm_extend.to_crs('epsg:3152')
-    buffer_length_in_meters = 5 * 1000 * 1.82
+    # add buffer of 0.5 nm
+    buffer_length_in_meters = 0.5 * 1852
     df_12nm_extend['geometry'] = df_12nm_extend.geometry.buffer(buffer_length_in_meters)
     df_12nm_extend_in = df_12nm_extend.to_crs(epsg=4326)
-    # df_12nm_extend_in.to_file("data/sweden_12nm_buffer_5nm.json", driver="GeoJSON", index=False)
     # Create minimal dataset and group it by dives
     ds = ds[["longitude", "latitude", "dive_num"]]
     df_glider = ds.to_pandas().groupby("dive_num").mean()
