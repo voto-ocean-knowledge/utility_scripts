@@ -1,6 +1,7 @@
 import numpy as np
 import datetime
 from erddapy import ERDDAP
+import geopandas as gp
 import pandas as pd
 import pathlib
 import os
@@ -30,8 +31,10 @@ def main():
     num_nrt = len(nrt)
     unit_check(e, nrt[np.random.randint(0, num_nrt-1)])
     profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds-1)])
+    sensible_values(e, nrt[np.random.randint(0, num_ds-1)])
     sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
-    sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
+    interntional_waters_check(e, "nrt_SEA067_M27")
+    interntional_waters_check(e, nrt[np.random.randint(0, num_nrt-1)])
     good_times()
     manual_qc()
 
@@ -164,6 +167,40 @@ def unit_check(e, dataset_id):
         if var == "oxygen_concentration":
             if attrs["units"] != "mmol m-3":
                 print(f"bad oxy units {attrs['units']}")
+
+
+def interntional_waters_check(e, dataset_id):
+    e.dataset_id = dataset_id
+    e.variables = [
+        "longitude",
+        "latitude",
+        "dive_num",
+        "vertical_distance_to_seafloor"
+    ]
+    url = e.get_download_url()
+    df = pd.read_csv(url, skiprows=[1])
+    df_glider = df[~np.isnan(df["vertical_distance_to_seafloor"])].groupby('dive_num').mean()
+    df_12nm = gp.read_file("/data/third_party/eez_12nm/eez_12nm_filled.geojson")
+    # extend the Swedish territorial waters by a buffer lenght
+    df_12nm_extend = df_12nm.copy()
+    df_12nm_extend = df_12nm_extend.to_crs('epsg:3152')
+    # add buffer of 0.5 nm
+    buffer_length_in_meters = 0.5 * 1852
+    df_12nm_extend['geometry'] = df_12nm_extend.geometry.buffer(buffer_length_in_meters)
+    df_12nm_extend_in = df_12nm_extend.to_crs(epsg=4326)
+    # Create minimal dataset and group it by dives
+    df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.longitude, df_glider.latitude))
+    # Align crs and check which dives fall within Swedish 12 nm waters and helcom polygons
+    df_glider = df_glider.set_crs(epsg=4326)
+    df_12nm_extend = df_12nm_extend_in.to_crs(df_glider.crs)
+    df_12nm_extend = gp.sjoin(df_12nm_extend, df_glider, predicate='contains')
+    df_glider.index.rename("index", inplace=True)
+    df_glider["dive_num"] = df_glider.index
+    df_12nm_extend_id = df_12nm_extend[["index_right", "sovereign1"]]
+    df_glider = pd.merge(df_glider, df_12nm_extend_id, left_on="dive_num", right_on="index_right", how="left")
+    df_glider.loc[df_glider.sovereign1 != "Sweden", "sovereign1"] = "International waters"
+    if not (df_glider["sovereign1"].values == 'International waters').all():
+        print(f"potential territorial waters data in {dataset_id}")
 
 
 def good_times():
