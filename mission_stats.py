@@ -8,7 +8,7 @@ def compute_glider_stats():
     try:
         df_stats = pd.read_csv('/home/pipeline/stats.csv')
     except:
-        df_stats = pd.DataFrame({"glider": [], "mission": [], "legato_freq": []})
+        df_stats = pd.DataFrame({"glider": [], "mission": [], "ctd_period": [], "oxy_period": []})
 
     glider_paths = list(Path("/data/data_raw/complete_mission").glob("SEA*"))
     for glider_path in glider_paths:
@@ -20,14 +20,13 @@ def compute_glider_stats():
             if sum(sum(a)):
                 continue
             try:
-                legato_sampling_freq = utilities.ctd_sampling_period(glider, mission)
-                new_row = pd.DataFrame({"glider": glider, "mission": mission,
-                                        "legato_freq": legato_sampling_freq},
+                sampling_periods = utilities.sensor_sampling_period(glider, mission)
+                new_row = pd.DataFrame(sampling_periods,
                                        index=[len(df_stats)])
                 df_stats = pd.concat((df_stats, new_row))
             except:
                 print(f"fail for SEA{glider} M{mission}")
-    df_stats.to_csv('/home/pipeline/stats.csv', index=False)
+        df_stats.to_csv('/home/pipeline/stats.csv', index=False)
 
 
 if __name__ == '__main__':

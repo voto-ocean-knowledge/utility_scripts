@@ -92,14 +92,20 @@ def set_best_dtype(ds):
     return ds
 
 
-def ctd_sampling_period(glider, mission):
+def sensor_sampling_period(glider, mission):
     # Get sampling period of CTD in seconds for a given glider mission
     fn = f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/sea{str(glider).zfill(3)}.{mission}.pld1.raw.10.gz"
     df = pd.read_csv(fn, sep=";", dayfirst=True, parse_dates=["PLD_REALTIMECLOCK"])
     if "LEGATO_TEMPERATURE" in list(df):
-        df = df.dropna(subset=["LEGATO_TEMPERATURE"])
+        df_ctd = df.dropna(subset=["LEGATO_TEMPERATURE"])
     else:
-        df = df.dropna(subset=["GPCTD_TEMPERATURE"])    
-    time_diff = df["PLD_REALTIMECLOCK"].diff().median()
-    seconds = time_diff.microseconds / 1e6
-    return seconds
+        df_ctd = df.dropna(subset=["GPCTD_TEMPERATURE"])
+    ctd_seconds = df_ctd["PLD_REALTIMECLOCK"].diff().median().microseconds / 1e6
+
+    if "AROD_FT_DO" in list(df):
+        df_oxy = df.dropna(subset=["AROD_FT_DO"])
+    else:
+        df_oxy = df.dropna(subset=["LEGATO_CODA_DO"])
+    oxy_seconds = df_oxy["PLD_REALTIMECLOCK"].diff().median().microseconds / 1e6
+    sample_dict = {"glider": glider, "mission": mission, "ctd_period": ctd_seconds, "oxy_period": oxy_seconds}
+    return sample_dict
