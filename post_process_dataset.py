@@ -35,11 +35,11 @@ def calculate_bbp(ds, beam_angle=117):
                  'observation_type': 'calculated',
                  'standard_name': f'{wavelength}_nm_scattering_of_particles_integrated_over_the_backwards hemisphere',
                  "long_name": f"{wavelength} nm b_bp: scattering of particles integrated over the backwards hemisphere",
-                 "processing": "backscatter b_bp calculated following methods in the Ocean Observatories Initiative document "
+                 "processing": "Particulate backscatter b_bp calculated following methods in the Ocean Observatories Initiative document "
                                "DATA PRODUCT SPECIFICATION FOR OPTICAL BACKSCATTER (RED WAVELENGTHS) Version 1-05 "
                                "Document Control Number 1341-00540 2014-05-28. Downloaded from "
                                "https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf"}
-    ds["backscatter"] = bbp
+    ds["particulate_backscatter"] = bbp
 
     return ds
 
