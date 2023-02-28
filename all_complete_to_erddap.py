@@ -30,5 +30,5 @@ if __name__ == '__main__':
         glider, mission, proc = row.glider, row.mission, row.proc_time
         print(f"Will send file {i}/{total}: SEA{glider} M{mission}")
         _log.info(f"Send file {i}/{total}: SEA{glider} M{mission}")
-        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_pipeline.sh", str(glider), str(mission)])
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(glider), str(mission)])
     _log.info(f"Complete send to erddap")
