@@ -63,16 +63,19 @@ def find_best_dtype(var_name, da):
     input_dtype = da.dtype.type
     if var_name[-2:] == "qc":
         return np.int8
-    if var_name[-3:] == "raw":
-        input_dtype = np.int32
-    if "int" in str(input_dtype):
-        if max(da.values) < 2**16 / 2:
+    if var_name[-3:] == "raw" or "int" in str(input_dtype):
+        if np.nanmax(da.values) < 2 ** 16 / 2:
             return np.int16
-        elif max(da.values) < 2**32 / 2:
+        elif np.nanmax(da.values) < 2 ** 32 / 2:
             return np.int32
     if input_dtype == np.float64:
         return np.float32
     return input_dtype
+
+
+def set_fill_value(new_dtype):
+    fill_val = 2 ** (int(re.findall('\d+', str(new_dtype))[0]) - 1) - 1
+    return fill_val
 
 
 def set_best_dtype(ds):
@@ -86,6 +89,10 @@ def set_best_dtype(ds):
         _log.debug(f"{var_name} input dtype {input_dtype} change to {new_dtype}")
         da_new = da.astype(new_dtype)
         ds = ds.drop_vars(var_name)
+        if "int" in str(new_dtype):
+            fill_val = set_fill_value(new_dtype)
+            da_new[np.isnan(da)] = fill_val
+            da_new.encoding["_FillValue"] = fill_val
         ds[var_name] = da_new
     bytes_out = ds.nbytes
     _log.info(f"Space saved by dtype downgrade: {int(100 * (bytes_in - bytes_out) / bytes_in)} %")
