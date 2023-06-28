@@ -1,14 +1,14 @@
 import xarray as xr
 from pathlib import Path
 import subprocess
-from office_check_glider_files import list_missions, skip_projects
+from office_check_glider_files import list_missions, skip_projects, secrets
 
-base = Path("/run/user/1000/gvfs/afp-volume:host=VOTO_Storage.local,user=callum.rollo,volume=DATA/")
+base = Path(secrets["data_path"])
 
 
 def proc(mission_dir, reprocess=False):
     dir_parts = list(mission_dir.parts)
-    dir_parts[7] = "4_Processed"
+    dir_parts[4] = "4_Processed"
     adcp_dir = Path(*dir_parts) / "ADCP"
     if not adcp_dir.exists():
         # TODO check if this is a mission with ADCP data or not
