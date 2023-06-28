@@ -101,15 +101,15 @@ def bad_dataset_id(df_datasets):
     for dataset_id, row in df_datasets.iterrows():
         name = row["title"]
         if "adcp" in dataset_id:
-            print("skip namecheck for adcp data")
+            #print("skip namecheck for adcp data")
             continue
-        if " " in name:
+        if " " in name and "King" not in name:
             num_title = int(name[3:6])
         else:
             num_title = int(name.split("-")[0][-2:])
         num_id = int(dataset_id.split("_")[1][-3:])
         if num_id != num_title:
-            print(name, dataset_id)
+            print("bad dataset name", name, dataset_id)
 
 
 def profile_num_vs_dive_num(e, dataset_id):
@@ -205,6 +205,7 @@ def interntional_waters_check(e, dataset_id):
 
 def good_times():
     print("TODO: check times of all datetime like columns are in expected range")
+    print("TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
 
 
 def manual_qc():
