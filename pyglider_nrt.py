@@ -14,7 +14,7 @@ logging.basicConfig(filename='/data/log/pyglider_nrt.log',
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
-glider_no_proc = [57]
+glider_no_proc = []
 
 
 def proc_nrt():

@@ -31,4 +31,8 @@ if __name__ == '__main__':
         print(f"Will send file {i}/{total}: SEA{glider} M{mission}")
         _log.info(f"Send file {i}/{total}: SEA{glider} M{mission}")
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(glider), str(mission)])
+        if pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/ADCP/adcp.nc").exists():
+            _log.info(f"Send adcp file {i}/{total}: SEA{glider} M{mission}")
+            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap_adcp.sh", str(glider), str(mission)])
+
     _log.info(f"Complete send to erddap")
