@@ -89,20 +89,7 @@ def batched_process(args):
     return True
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='process SX files with pyglider')
-    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
-    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
-    parser.add_argument('kind', type=str, help='Kind of input, must be raw or sub')
-    parser.add_argument('--steps', type=str, help='List of steps to perform. 1 performs step, 0 skips it. e.g. "0, 0, '
-                                                  '1, 1" will skip delete old data and convert rawnc steps. '
-                                                  'Will perform the merge_rawnc, create l0 products')
-    parser.add_argument('--batchsize', type=int, help='Number of dives to process per batch. Defaults to 500. Reduce '
-                                                      'this number if processing is maxxing out memory. Processed '
-                                                      'datasets are recombined at the end')
-    args = parser.parse_args()
-    if args.kind not in ['raw', 'sub']:
-        raise ValueError('kind must be raw or sub')
+def process(args):
     logf = f'/data/log/complete_mission/SEA{str(args.glider)}_M{str(args.mission)}.log'
     logging.basicConfig(filename=logf,
                         filemode='w',
@@ -153,3 +140,20 @@ if __name__ == '__main__':
         subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(args.glider), str(args.mission)])
         _log.info("Sent file to erddap")
         _log.info("Finished processing")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='process SX files with pyglider')
+    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
+    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
+    parser.add_argument('kind', type=str, help='Kind of input, must be raw or sub')
+    parser.add_argument('--steps', type=str, help='List of steps to perform. 1 performs step, 0 skips it. e.g. "0, 0, '
+                                                  '1, 1" will skip delete old data and convert rawnc steps. '
+                                                  'Will perform the merge_rawnc, create l0 products')
+    parser.add_argument('--batchsize', type=int, help='Number of dives to process per batch. Defaults to 500. Reduce '
+                                                      'this number if processing is maxxing out memory. Processed '
+                                                      'datasets are recombined at the end')
+    args = parser.parse_args()
+    if args.kind not in ['raw', 'sub']:
+        raise ValueError('kind must be raw or sub')
+    process(args)

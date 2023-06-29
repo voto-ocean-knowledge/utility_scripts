@@ -12,4 +12,3 @@ if __name__ == '__main__':
         proc(mission, reprocess=False)
         good_mission(mission, processed_missions, explained=explained_missions)
         adcp_proc_check(mission)
-        
