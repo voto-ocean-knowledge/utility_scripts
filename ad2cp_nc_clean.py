@@ -18,8 +18,12 @@ def proc(mission_dir, reprocess=False):
     glider_str, mission_str = dir_parts[-1].split("_")
     glider = int(glider_str[3:])
     mission = int(mission_str[1:])
-    fn = f"sea{glider}_m{mission}.ad2cp.00000.nc"
-    nc = adcp_dir / fn
+    files = list(adcp_dir.glob(f"*{glider}*{mission}*000*.nc"))
+    if not files:
+        print(f"no files found in {adcp_dir}")
+        return
+    nc = files[0]
+    fn = nc.name
     insize = nc.lstat().st_size
     fout = adcp_dir / f"sea{glider}_m{mission}_ad2cp.nc"
     if fout.exists():
@@ -57,6 +61,10 @@ def proc(mission_dir, reprocess=False):
     subprocess.check_call(
         ['/usr/bin/bash', "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/upload_adcp.sh",
          str(glider), str(mission), str(fout)])
+    msg = f"uploaded ADCP data for {pretty_mission} SEA{glider} M{mission}"
+    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg, "uploaded ADCP",
+                           "callum.rollo@voiceoftheocean.org"])
+
     print("finished")
 
 

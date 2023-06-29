@@ -70,6 +70,9 @@ def good_mission(download_mission_path, processed_missions, explained=()):
         if pld_path.is_dir() and nav_path.is_dir():
             print("Attempt to upload files")
             subprocess.check_call(['/usr/bin/bash', "upload.sh", str(glider), str(mission), mission_path])
+            msg = f"uploaded raw data for {pretty_mission}"
+            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg,
+                                   "new mission uploaded", "callum.rollo@voiceoftheocean.org"])
 
 
 def list_missions(to_skip=()):
