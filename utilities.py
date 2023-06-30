@@ -2,6 +2,7 @@ import re
 import numpy as np
 import pandas as pd
 import logging
+import subprocess
 _log = logging.getLogger(__name__)
 
 
@@ -116,3 +117,9 @@ def sensor_sampling_period(glider, mission):
     oxy_seconds = df_oxy["PLD_REALTIMECLOCK"].diff().median().microseconds / 1e6
     sample_dict = {"glider": glider, "mission": mission, "ctd_period": ctd_seconds, "oxy_period": oxy_seconds}
     return sample_dict
+
+
+def mailer(subject, message, recipient="callum.rollo@voiceoftheocean.org"):
+    _log.warning(f"email: {subject}, {message}, {recipient}")
+    subject = subject.replace(" ", "-")
+    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", message, subject, recipient])

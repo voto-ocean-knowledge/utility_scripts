@@ -2,24 +2,38 @@ import xarray as xr
 from pathlib import Path
 import subprocess
 from office_check_glider_files import list_missions, skip_projects, secrets
+from utilities import mailer
 
 base = Path(secrets["data_path"])
+explained_issues = [(66, 45)]
 
 
 def proc(mission_dir, reprocess=False):
+    if "XXX" in str(mission_dir):
+        return
+    sub_directories = list(mission_dir.glob("*/")) + list(mission_dir.glob("*/*"))
+    names = list(sub.name for sub in sub_directories)
+    if "ADCP" not in names:
+        # No raw ADCP data in 1_Downloaded
+        return
+
     dir_parts = list(mission_dir.parts)
     dir_parts[4] = "4_Processed"
     adcp_dir = Path(*dir_parts) / "ADCP"
-    if not adcp_dir.exists():
-        # TODO check if this is a mission with ADCP data or not
-        #print(f"no adcp data for {pretty_mission}")
-        return
     pretty_mission = str(mission_dir)[85:]
     glider_str, mission_str = dir_parts[-1].split("_")
     glider = int(glider_str[3:])
     mission = int(mission_str[1:])
+    if (glider, mission) in explained_issues:
+        return
+    if not adcp_dir.exists():
+        # TODO check if this is a mission with ADCP data or not
+        print(f"no adcp data for {mission_dir}")
+        mailer(f"uploaded ADCP", f"no ADCP directory or files in {adcp_dir}")
+        return
     files = list(adcp_dir.glob(f"*{glider}*{mission}*000*.nc"))
     if not files:
+        mailer(f"uploaded ADCP", f"no ADCP files in {adcp_dir}")
         print(f"no files found in {adcp_dir}")
         return
     nc = files[0]
@@ -62,9 +76,7 @@ def proc(mission_dir, reprocess=False):
         ['/usr/bin/bash', "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/upload_adcp.sh",
          str(glider), str(mission), str(fout)])
     msg = f"uploaded ADCP data for {pretty_mission} SEA{glider} M{mission}"
-    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg, "uploaded ADCP",
-                           "callum.rollo@voiceoftheocean.org"])
-
+    mailer("uploaded ADCP", msg)
     print("finished")
 
 

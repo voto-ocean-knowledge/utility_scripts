@@ -6,6 +6,7 @@ import sys
 import os
 import json
 import subprocess
+from utilities import mailer
 script_dir = Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
@@ -34,6 +35,8 @@ def erddap_download():
 
 
 def good_mission(download_mission_path, processed_missions, explained=()):
+    if "XXX" in str(download_mission_path):
+        return
     parts = list(download_mission_path.parts)
     parts[4] = "3_Non_Processed"
     mission_path = Path(*parts)
@@ -50,29 +53,38 @@ def good_mission(download_mission_path, processed_missions, explained=()):
         print(f"known bad mission {glider, mission}. Skipping")
         return
     if not mission_path.is_dir():
-        print(f"Downloaded but not processed {pretty_mission}")
+        msg = f"Downloaded but not processed {pretty_mission}"
+        mailer("mission not processed", msg)
+        return
     pld_path = mission_path / "PLD_raw"
     if not pld_path.is_dir():
-        print(f"no pld, {pretty_mission}")
+        msg = f"no pld, {pretty_mission}"
+        mailer("mission not processed", msg)
+        return
     nav_path = mission_path / "NAV"
     if not nav_path.is_dir():
-        print(f"no nav, {pretty_mission}")
+        msg = f"no nav, {pretty_mission}"
+        mailer("mission not processed", msg)
+        return
     pld_files = list(pld_path.glob(f"sea{str(glider).zfill(3)}.{mission}.pld1.raw*"))
     nav_files = list(nav_path.glob(f"sea{str(glider).zfill(3)}.{mission}.gli.sub*"))
     if len(pld_files) == 0 or len(nav_files) == 0:
-        print(f"No matching files {pretty_mission} ")
+        msg = f"No matching files {pretty_mission} "
+        mailer("mission not processed", msg)
+        return
     missmatch = abs(len(pld_files) - len(nav_files))
     if missmatch > 50:
-        print(f"Missmatch {len(nav_files)} nav files vs {len(pld_files)} pld files {pretty_mission}")
-
+        msg = f"Missmatch {len(nav_files)} nav files vs {len(pld_files)} pld files {pretty_mission}"
+        mailer("mission not processed", msg)
+        return
     if (glider, mission) not in processed_missions:
-        print(f"Not processed {pretty_mission}")
+        msg = f"Not processed {pretty_mission}"
+        mailer("mission not processed", msg)
+
         if pld_path.is_dir() and nav_path.is_dir():
-            print("Attempt to upload files")
             subprocess.check_call(['/usr/bin/bash', "upload.sh", str(glider), str(mission), mission_path])
             msg = f"uploaded raw data for {pretty_mission}"
-            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", msg,
-                                   "new mission uploaded", "callum.rollo@voiceoftheocean.org"])
+            mailer("new mission uploaded", msg)
 
 
 def list_missions(to_skip=()):
