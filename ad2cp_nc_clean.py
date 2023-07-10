@@ -73,7 +73,7 @@ def proc(mission_dir, reprocess=False):
     data.to_netcdf(fout)
     print("send to pipeline")
     subprocess.check_call(
-        ['/usr/bin/bash', "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/upload_adcp.sh",
+        ['/usr/bin/bash', "/home/pipeline/utility_scripts/upload_adcp.sh",
          str(glider), str(mission), str(fout)])
     msg = f"uploaded ADCP data for {pretty_mission} SEA{glider} M{mission}"
     mailer("uploaded ADCP", msg)
