@@ -83,6 +83,7 @@ def post_process(ds):
     ds = filter_territorial_data(ds)
     if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
+    ds = ds.sortby("time")
     _log.info("complete post process")
     return ds
 
