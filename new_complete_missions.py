@@ -40,7 +40,7 @@ def main():
             args = types.SimpleNamespace()
             args.glider = glider
             args.mission = mission
-            args.type = "raw"
+            args.kind = "raw"
             process(args)
             nc_file = list((pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/timeseries")).glob('*.nc'))[0]
             nc_time = nc_file.lstat().st_mtime
