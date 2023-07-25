@@ -7,9 +7,13 @@ import subprocess
 files_dict = {"/data/log/rsync_nrt.log": "total size is",
               "/data/log/rsync_metocc.log": "total size is",
               "/data/log/rsync_web.log": "total size is",
+              "/data/log/erddap_rsync.log": "total size is",
+              "/data/log/rsync_sb.log": "total size is",
               "/data/log/pyglider_nrt.log": "Finished nrt processing",
               "/data/log/voto_add_sailbuoy.log": "Finished download of sailbuoy data",
               "/data/log/voto_add_data.log": "nrt mission add complete",
+              "/data/log/voto_stats_data.log": "Finished computing stats",
+              "/data/log/new_complete_mission.log": "Complete",
               "/data/log/nrt_plots.log": "End plot creation"}
 
 
