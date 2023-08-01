@@ -77,12 +77,23 @@ def process_altimeter(ds):
     return ds
 
 
+def fix_variables(ds):
+    attrs = ds.attrs
+    if int(attrs["glider_serial"]) == 69 and int(attrs["deployment_id"]) == 15:
+        _log.info("correcting phycocyanin values for SEA69 M15")
+        ds["phycocyanin"].values = ds["phycocyanin"].values * 0.1
+        ds.phycocyanin.attrs["comment"] += (" Values multiplied by 0.1 in post-processing to correct for bad scale "
+                                            "factor during deployment")
+    return ds
+
+
 def post_process(ds):
     _log.info("start post process")
     ds = process_altimeter(ds)
     ds = filter_territorial_data(ds)
     if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
+    ds = fix_variables(ds)
     ds = ds.sortby("time")
     _log.info("complete post process")
     return ds
