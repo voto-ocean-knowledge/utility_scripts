@@ -4,8 +4,23 @@ import pandas as pd
 import numpy as np
 import logging
 import types
+from pathlib import Path
 from pyglider_single_mission import process
 _log = logging.getLogger(__name__)
+
+
+def adcp_status(glider, mission):
+    pld_file = list(Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/").glob("*pld1.raw.*gz"))[0]
+    df = pd.read_csv(pld_file, sep=";")
+    if "AD2CP_PRESSURE" not in list(df):
+        _log.info("no adcp data expected")
+        return True
+    if Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/ADCP/sea{glider}_m{mission}_ad2cp.nc").exists():
+        _log.info("adcp data file found")
+        return True
+    else:
+        _log.warning("did not find expected ADCP file")
+        return False
 
 
 def main():
@@ -37,6 +52,8 @@ def main():
         a = [np.logical_and(df_reprocess.glider == glider, df_reprocess.mission == mission)]
         if not sum(sum(a)):
             _log.warning(f"new mission {mission_path}")
+            if not adcp_status(glider, mission):
+                continue
             args = types.SimpleNamespace()
             args.glider = glider
             args.mission = mission
