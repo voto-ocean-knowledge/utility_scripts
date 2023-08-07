@@ -21,6 +21,7 @@ def main():
     # drop the allDatasets row and make the datasetID the index for easier reading
     df_datasets.set_index("datasetID", inplace=True)
     df_datasets.drop("allDatasets", inplace=True)
+    df_datasets = df_datasets[~df_datasets.index.str.contains("ctd")]
     enough_datasets(df_datasets)
     nrt_vs_complete(df_datasets)
     bad_depths(df_datasets)

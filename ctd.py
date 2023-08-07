@@ -4,6 +4,7 @@ from pathlib import Path
 import datetime
 import subprocess
 import logging
+import gsw
 _log = logging.getLogger(__name__)
 
 
@@ -171,6 +172,8 @@ def read_ctd(ctd_csv, locfile, df_base):
     df["longitude"] = row.Longitude
     df["latitude"] = row.Latitude
     df["cast_number"] = cast_number
+    if 'Depth [m]' in list(df):
+        df["Press. [dbar]"] = gsw.p_from_z(-df['Depth [m]'], row.Latitude)
     df_base = pd.concat((df_base, df))
     return df_base
 
