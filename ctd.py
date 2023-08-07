@@ -151,8 +151,12 @@ def read_ctd(ctd_csv, locfile, df_base):
         for i, line in enumerate(file):
             if "Measurement" in line:
                 skips = i
+                df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False, parse_dates={'datetime': ["Measurement Date/Time"]}, date_format="%Y-%m-%d %H:%M:%S")
                 break
-    df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False, parse_dates=["Measurement Date/Time"])
+            if line[:4] == "Date":
+                skips = i
+                df = pd.read_csv(ctd_csv, skiprows=skips, parse_dates={'datetime': ["Date", "Time"]}, date_format="%Y/%m/%d %H:%M:%S")
+                break
     with open(ctd_csv) as file:
         for i, line in enumerate(file):
             if "SondeName=ASTD152-ALC-R02" in line:
@@ -182,7 +186,7 @@ def filenames_match(locfile):
 def ds_from_df(df):
     ds = xr.Dataset()
     time_attr = {"name": "time"}
-    ds['time'] = ('time', df["Measurement Date/Time"], time_attr)
+    ds['time'] = ('time', df["datetime"], time_attr)
 
     for col_name in list(df):
         if col_name in clean_names.keys():
@@ -204,7 +208,7 @@ if __name__ == '__main__':
     df = pd.DataFrame()
     for locfile in location_files:
         csv_dir = locfile.parent / "CSV"
-        csv_files = list(csv_dir.glob("*.csv"))
+        csv_files = list(csv_dir.glob("*.*sv"))
         filenames_match(locfile)
         for ctd_csv in csv_files:
             df = read_ctd(ctd_csv, locfile, df)
