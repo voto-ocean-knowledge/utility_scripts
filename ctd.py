@@ -153,11 +153,15 @@ def read_ctd(ctd_csv, locfile, df_base):
     locations = pd.read_csv(locfile, sep=";")
     fn = ctd_csv.name.split(".")[0]
     row = locations[locations.File == fn].iloc[0]
+    sep = "/"
     with open(ctd_csv) as file:
         for i, line in enumerate(file):
+            if "File Date" in line:
+                if "-" in line:
+                    sep = "-"
             if "Measurement" in line:
                 skips = i
-                df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False, parse_dates={'datetime': ["Measurement Date/Time"]}, date_format="%Y-%m-%d %H:%M:%S")
+                df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False, parse_dates={'datetime': ["Measurement Date/Time"]}, date_format=f"%Y{sep}%m{sep}%d %H:%M:%S")
                 break
             if line[:4] == "Date":
                 skips = i
@@ -207,14 +211,7 @@ def ds_from_df(df):
     return ds
 
 
-if __name__ == '__main__':
-    logf = f'/data/log/process_ctd.log'
-    logging.basicConfig(filename=logf,
-                        filemode='a',
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    _log.info(f"Start process ctds")
+def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
     df = pd.DataFrame()
     for locfile in location_files:
@@ -228,5 +225,22 @@ if __name__ == '__main__':
     ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
-        ['/usr/bin/rsync', "/mnt/samba/processed/ctd_deployment.nc", "usrerddap@13.51.101.57:/media/data/ctd/ctd_deployment.nc"])
+        ['/usr/bin/rsync', "/mnt/samba/processed/ctd_deployment.nc",
+         "usrerddap@13.51.101.57:/media/data/ctd/ctd_deployment.nc"])
+
+
+if __name__ == '__main__':
+    logf = f'/data/log/process_ctd.log'
+    logging.basicConfig(filename=logf,
+                        filemode='a',
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        level=logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    _log.info(f"Start process ctds")
+    try:
+        main()
+    except:
+        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", "failed to process ctd data", "spongebob",
+                               "callum.rollo@voiceoftheocean.org"])
+
     _log.info(f"Complete process ctds")
