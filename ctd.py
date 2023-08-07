@@ -10,18 +10,23 @@ _log = logging.getLogger(__name__)
 
 clean_names = {"Press. [dbar]": "pressure",
                "Temp. [℃]": "temperature",
+               "Temp. [deg C]": "temperature",
                "Salinity": "salinity",
+               "Sal. [ ]": "salinity",
                "Cond. [mS/cm]": "conductivity",
                'Density [kg/m3]': "density",
+               'Density [kg/m^3]': "density",
                'DO [μmol/L]': 'oxygen_concentration',
                'Chl-a [μg/L]': 'chlorophyll',
+               'Chl-a [ug/l]': 'chlorophyll',
                'sonde_name': 'sonde_name',
                'sonde_number': 'sonde_number',
                'calibration_date': 'calibration_date',
                'filename': 'filename',
                'latitude': 'latitude',
                'cast_number': 'cast_number',
-               'longitude': 'longitude',}
+               'longitude': 'longitude',
+               }
 
 attrs_dict = {"sonde_name": {"comment": "model name of CTD"},
               "sonde_number": {"comment": "serial number of CTD"},
@@ -174,6 +179,9 @@ def read_ctd(ctd_csv, locfile, df_base):
     df["cast_number"] = cast_number
     if 'Depth [m]' in list(df):
         df["Press. [dbar]"] = gsw.p_from_z(-df['Depth [m]'], row.Latitude)
+    if not 'DO [μmol/L]' in list(df):
+        df['DO [μmol/L]'] = df['Weiss-DO [mg/l]'] * 31.252
+        df = df.rename(columns={"Temp. [deg C]": "Temp. [℃]", "Sal. [ ]": "Salinity", "Density [kg/m^3]": "Density [kg/m3]", "Chl-a [ug/l]": "Chl-a [μg/L]"})
     df_base = pd.concat((df_base, df))
     return df_base
 
@@ -216,7 +224,6 @@ if __name__ == '__main__':
         for ctd_csv in csv_files:
             df = read_ctd(ctd_csv, locfile, df)
             _log.info(f"Add {ctd_csv}")
-
     ds = ds_from_df(df)
     ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
