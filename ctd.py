@@ -5,6 +5,7 @@ import datetime
 import subprocess
 import logging
 import gsw
+from utilities import encode_times
 _log = logging.getLogger(__name__)
 
 
@@ -208,6 +209,7 @@ def ds_from_df(df):
             name = clean_names[col_name]
             ds[name] = ('time', df[col_name], attrs_dict[name])
     ds.attrs = attrs
+    ds = encode_times(ds)
     return ds
 
 
