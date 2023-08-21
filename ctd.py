@@ -208,6 +208,7 @@ def ds_from_df(df):
         if col_name in clean_names.keys():
             name = clean_names[col_name]
             ds[name] = ('time', df[col_name], attrs_dict[name])
+    ds["cast_no"] = ds.cast_number
     ds.attrs = attrs
     ds = encode_times(ds)
     return ds
