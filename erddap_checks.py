@@ -5,6 +5,7 @@ import geopandas as gp
 import pandas as pd
 import pathlib
 import os
+from utilities import mailer
 script_dir = pathlib.Path(__file__).parent.absolute()
 os.chdir(script_dir)
 
@@ -23,7 +24,8 @@ def main():
     df_datasets.drop("allDatasets", inplace=True)
     df_datasets = df_datasets[~df_datasets.index.str.contains("ctd")]
     enough_datasets(df_datasets)
-    nrt_vs_complete(df_datasets)
+    df_datasets = nrt_vs_complete(df_datasets)
+    datasets_to_emodnet(df_datasets)
     bad_depths(df_datasets)
     bad_dataset_id(df_datasets)
     delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
@@ -53,7 +55,7 @@ def enough_datasets(df_datasets):
                             "nrt": nrt, "delayed": complete},
                            index=[len(total_datasets)])
     if total < total_datasets.total.max():
-        print("total has decreaseed")
+       mailer("cherddap", "total datasets decreased")
     total_datasets = pd.concat((total_datasets, new_row))
     total_datasets.to_csv("total_datasets.csv", index=False)
 
@@ -74,7 +76,7 @@ def nrt_vs_complete(df_datasets):
     df_delayed = df_datasets[df_datasets.mission_type == "delayed"]
     df_delayed.index = "SEA" + df_delayed.glider.astype(str) + "_M" + df_delayed.mission.astype(str)
 
-    expected_fails = ["SEA61_M63", "SEA67_M15", "SEA66_M45"]
+    expected_fails = ["SEA61_M63", "SEA67_M15", "SEA66_M45", "SEA57_M75", "SEA70_M29"]
     for this_dataset in df_nrt.index:
         if this_dataset in expected_fails:
             continue
@@ -84,17 +86,17 @@ def nrt_vs_complete(df_datasets):
                          df_nrt.loc[this_dataset]["maxTime (UTC)"]
             # print("last update: ", time_since)
             if time_since > datetime.timedelta(days=3):
-                print(f"unprocessed complete dataset: {this_dataset}. {time_since} since last nrt data")
+                msg = f"unprocessed complete dataset: {this_dataset}. {time_since} since last nrt data"
+                mailer("cherddap", msg)
 
     for this_dataset in df_delayed.index:
         if this_dataset not in df_nrt.index:
-            print(f"{this_dataset} not found in nrt")
-            print("last update:", df_delayed.loc[this_dataset]["maxTime (UTC)"])
-
+            mailer("cherdap",f"{this_dataset} not found in nrt. Last update:", df_delayed.loc[this_dataset]["maxTime (UTC)"])
+    return df_datasets
 
 def bad_depths(df_datasets):
     if len(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)']) > 0:
-        print("bad altitude")
+        mailer("cherddap", "bad altitude")
 
 
 def bad_dataset_id(df_datasets):
@@ -110,7 +112,7 @@ def bad_dataset_id(df_datasets):
             num_title = int(name.split("-")[0][-2:])
         num_id = int(dataset_id.split("_")[1][-3:])
         if num_id != num_title:
-            print("bad dataset name", name, dataset_id)
+            mailer("cherddap", f"bad dataset name:  {name}, {dataset_id}")
 
 
 def profile_num_vs_dive_num(e, dataset_id):
@@ -129,11 +131,11 @@ def profile_num_vs_dive_num(e, dataset_id):
     ds = ds.drop_dims("timeseries")
     ds_sort = ds.sortby('time')
     if not ds.time.equals(ds_sort.time):
-        print("datasets not sorted by time")
+        mailer("cherddap", "datasets not sorted by time")
     profiles = len(np.unique(ds.profile_num)) 
     dives = len(np.unique(ds.dive_num))
     if abs(profiles / 2 - dives) > 3:
-        print(f"missmatch between {dataset_id} profile_num {profiles} and dive_num {dives} ({dives*2})")
+        mailer("cherddap", f"missmatch between {dataset_id} profile_num {profiles} and dive_num {dives} ({dives*2})")
 
 
 def sensible_values(e, dataset_id):
@@ -153,9 +155,9 @@ def sensible_values(e, dataset_id):
         if var == "desired_heading":
             low_lim = -1e5
         if mini < low_lim:
-            print(f"{dataset_id} bad var {var} minimum {mini}")
+            mailer("cherddap", f"{dataset_id} bad var {var} minimum {mini}")
         if maxi > high_lim:
-            print(f"{dataset_id} bad var {var} maximum {maxi}")
+            mailer("cherddap", f"{dataset_id} bad var {var} maximum {maxi}")
 
 
 def unit_check(e, dataset_id):
@@ -167,7 +169,7 @@ def unit_check(e, dataset_id):
         attrs = ds[var].attrs
         if var == "oxygen_concentration":
             if attrs["units"] != "mmol m-3":
-                print(f"bad oxy units {attrs['units']}")
+                mailer("cherddap", f"bad oxy units {attrs['units']}")
 
 
 def interntional_waters_check(e, dataset_id):
@@ -201,8 +203,24 @@ def interntional_waters_check(e, dataset_id):
     df_glider = pd.merge(df_glider, df_12nm_extend_id, left_on="dive_num", right_on="index_right", how="left")
     df_glider.loc[df_glider.sovereign1 != "Sweden", "sovereign1"] = "International waters"
     if not (df_glider["sovereign1"].values == 'International waters').all():
-        print(f"potential territorial waters data in {dataset_id}")
+        mailer("cherddap", f"potential territorial waters data in {dataset_id}")
 
+
+def datasets_to_emodnet(df_datasets):
+    df_nrt = df_datasets[df_datasets.mission_type == "nrt"]
+    df_delayed = df_datasets[df_datasets.mission_type == "delayed"]
+    e_emodnet = ERDDAP("https://erddap.emodnet-physics.eu/erddap")
+    df_emodnet = pd.read_csv(e_emodnet.get_search_url(search_for="voto", response="csv"))
+    emodent_datasets = df_emodnet["Dataset ID"].values
+    lost_datasets = []
+    check_names = list(df_nrt.index) + list(df_delayed.index)
+    for ds_name in check_names:
+        if ds_name not in emodent_datasets:
+            lost_datasets.append(ds_name)
+    if len(lost_datasets) > 0:
+        names_text = '\n'.join(lost_datasets)
+        msg = f"failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP \n: {names_text}"
+        mailer("cherddap", msg)
 
 def good_times():
     print("TODO: check times of all datetime like columns are in expected range")
