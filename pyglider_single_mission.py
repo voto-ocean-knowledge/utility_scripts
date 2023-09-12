@@ -22,14 +22,8 @@ _log = logging.getLogger(__name__)
 
 
 def batched_process(args):
-    if "batchsize" in args.__dict__.keys():
-        batch_size = args.batchsize
-    else:
-        batch_size = 20
-    if "steps" in args.__dict__.keys():
-        steps = [int(item) for item in args.steps.split(',')]
-    else:
-        steps = [1, 1, 1, 1]
+    batch_size = 20
+    steps = [1, 1, 1, 1]
 
     # Process in batches of dives (default 500) to avoid maxxing out memory
     input_dir = f"/data/data_raw/complete_mission/SEA{args.glider}/M{args.mission}/"
