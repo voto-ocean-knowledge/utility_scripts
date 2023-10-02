@@ -126,7 +126,6 @@ def profile_num_vs_dive_num(e, dataset_id):
         "profile_num",
     ]
     e.dataset_id = dataset_id
-
     ds = e.to_xarray()
     ds = ds.drop_dims("timeseries")
     ds_sort = ds.sortby('time')

@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    logf = f'/data/log/complete_mission/recombine_SEA{str(args.glider)}_M{str(args.mission)}.log'
+    logf = f"/data/log/complete_mission/recombine_SEA{str(args.glider)}_M{str(args.mission)}.log"
     logging.basicConfig(filename=logf,
                         filemode='w',
                         format='%(asctime)s %(levelname)-8s %(message)s',

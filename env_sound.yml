@@ -1,0 +1,7 @@
+name: process
+channels:
+  - conda-forge
+dependencies:
+        - imaplib
+        - gtts
+        - pydub

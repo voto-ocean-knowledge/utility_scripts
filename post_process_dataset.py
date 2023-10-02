@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 from utilities import encode_times, set_best_dtype
 from geocode import filter_territorial_data
+from post_process_ctd import salinity_pressure_correction, correct_rbr_lag
 _log = logging.getLogger(__name__)
 
 
@@ -89,6 +90,8 @@ def fix_variables(ds):
 
 def post_process(ds):
     _log.info("start post process")
+    ds = salinity_pressure_correction(ds)
+    ds = correct_rbr_lag(ds)
     ds = process_altimeter(ds)
     ds = filter_territorial_data(ds)
     if "backscatter_scaled" in list(ds):
@@ -99,29 +102,3 @@ def post_process(ds):
     return ds
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Combine ADCP data with glider data')
-    parser.add_argument('glider', type=int, help='glider number, e.g. 70')
-    parser.add_argument('mission', type=int, help='Mission number, e.g. 23')
-    parser.add_argument('kind', type=str, help='Kind of input, must be raw or sub')
-    args = parser.parse_args()
-    if args.kind not in ['raw', 'sub']:
-        raise ValueError('kind must be raw or sub')
-    logf = f'/data/log/complete_mission/post_process_SEA{str(args.glider)}_M{str(args.mission)}.log'
-    logging.basicConfig(filename=logf,
-                        filemode='w',
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    if args.kind == "raw":
-        mtype = "complete_mission"
-    else:
-        mtype = "nrt"
-    nc_path = Path(f"/data/data_l0_pyglider/{mtype}/SEA{args.glider}/M{args.mission}/timeseries/mission_timeseries.nc")
-    ds_in = xr.open_dataset(nc_path)
-    post_process(ds_in)
-    ds_in = set_best_dtype(ds_in)
-    ds_in = encode_times(ds_in)
-    tempfile = f"/data/tmp/SEA{args.glider}_M{args.mission}"
-    ds_in.to_netcdf(tempfile)
-    shutil.move(tempfile, str(nc_path))
