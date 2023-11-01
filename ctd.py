@@ -7,7 +7,9 @@ import logging
 import gsw
 from utilities import encode_times
 _log = logging.getLogger(__name__)
-
+sender = "/home/pipeline/utility_scripts/send.sh"
+if not Path(sender).exists():
+    sender = "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh"
 
 clean_names = {"Press. [dbar]": "pressure",
                "Temp. [℃]": "temperature",
@@ -218,12 +220,21 @@ def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
     df = pd.DataFrame()
     for locfile in location_files:
+        _log.info(f"processing location file {locfile}")
         csv_dir = locfile.parent / "CSV"
         csv_files = list(csv_dir.glob("*.*sv"))
         filenames_match(locfile)
         for ctd_csv in csv_files:
-            df = read_ctd(ctd_csv, locfile, df)
-            _log.info(f"Add {ctd_csv}")
+            _log.info(f"Start add {ctd_csv}")
+            try:
+                df = read_ctd(ctd_csv, locfile, df)
+            except:
+                _log.error(f"failed with {ctd_csv}")
+                subprocess.check_call(
+                    ['/usr/bin/bash', sender, f"failed to process ctd {ctd_csv}", "ctd-process",
+                     "callum.rollo@voiceoftheocean.org"])
+                continue
+            _log.info(f"Added {ctd_csv}")
     ds = ds_from_df(df)
     ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
@@ -243,7 +254,7 @@ if __name__ == '__main__':
     try:
         main()
     except:
-        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", "failed to process ctd data", "spongebob",
+        subprocess.check_call(['/usr/bin/bash', sender, "failed to process ctd data", "process-ctd",
                                "callum.rollo@voiceoftheocean.org"])
 
     _log.info(f"Complete process ctds")
