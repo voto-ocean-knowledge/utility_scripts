@@ -219,6 +219,7 @@ def ds_from_df(df):
 def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
     df = pd.DataFrame()
+    fn = 0
     for locfile in location_files:
         _log.info(f"processing location file {locfile}")
         csv_dir = locfile.parent / "CSV"
@@ -235,7 +236,9 @@ def main():
                      "callum.rollo@voiceoftheocean.org"])
                 continue
             _log.info(f"Added {ctd_csv}")
+            fn += 1
     ds = ds_from_df(df)
+    _log.info(f"total ctds = {fn}")
     ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
