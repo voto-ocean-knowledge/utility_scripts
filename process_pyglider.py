@@ -117,6 +117,9 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir, steps=(), pro
         dataset_type = "nrt" if kind == "sub" else "delayed"
         dataset_id = f"{dataset_type}_SEA{glider_num_pad}_M{deployment['metadata']['deployment_id']}"
         deployment['metadata']["dataset_id"] = dataset_id
+        with open("/data/deployment_yaml/deployment_profile_variables.yml", "r") as fin:
+            profile_variables = yaml.safe_load(fin)
+        deployment["profile_variables"] = profile_variables
         variables = list(deployment["netcdf_variables"].keys())
         if "keep_variables" in variables:
             variables.remove("keep_variables")
