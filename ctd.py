@@ -344,10 +344,10 @@ def main():
     ds = ds.rename(rename_dict)
     ds = flag_ctd(ds)
     ds = encode_times(ds)
-    ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
+    ds.to_netcdf("/data/ctd/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
-        ['/usr/bin/rsync', "/mnt/samba/processed/ctd_deployment.nc",
+        ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
          "usrerddap@13.51.101.57:/media/data/ctd/ctd_deployment.nc"])
 
 
