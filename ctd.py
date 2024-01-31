@@ -283,8 +283,8 @@ def ds_from_df(df):
             ds[col_name] = ('time', df[col_name], attrs_dict[col_name])
     ds["cast_no"] = ds.cast_number
     ds.attrs = attrs
-    ds = encode_times(ds)
     return ds
+
 
 def flag_ctd(ds):
     ds = flag_ioos(ds)
@@ -293,6 +293,8 @@ def flag_ctd(ds):
     ds.attrs["disclaimer"] = "Data, products and services from VOTO are provided 'as is' without any warranty as" \
                              " to fitness for a particular purpose."
     return ds
+
+
 def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
     df = pd.DataFrame()
@@ -341,6 +343,7 @@ def main():
                    }
     ds = ds.rename(rename_dict)
     ds = flag_ctd(ds)
+    ds = encode_times(ds)
     ds.to_netcdf("/mnt/samba/processed/ctd_deployment.nc")
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
