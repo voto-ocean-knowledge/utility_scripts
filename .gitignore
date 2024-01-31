@@ -6,3 +6,4 @@ lastcheck.txt
 message.mp3
 total_datasets.csv
 *.log
+.ipynb_checkpoints
