@@ -20,9 +20,9 @@ def salinity_pressure_correction(ds):
     Cmeas = ds['conductivity'].values
     Pmeas = ds['pressure'].values
     ds['conductivity'].values = Cmeas / (1 + X2 * Pmeas + X3 * Pmeas ** 2 + X4 * Pmeas ** 3)
-    ds['conductivity'].attrs['comment'] += "Pressure corrected in post-processing."
+    ds['conductivity'].attrs['comment'] = "Corrected for pressure lag in post-processing. "
     ds['salinity'].values = gsw.SP_from_C(ds['conductivity'].values, ds['temperature'].values, Pmeas)
-    ds['salinity'].attrs['comment'] += "Pressure corrected in post-processing."
+    ds['salinity'].attrs['comment'] = "Corrected for pressure lag in post-processing. "
     return ds
 
 
@@ -33,10 +33,12 @@ def correct_rbr_lag(ds):
     :param data: 
     :return: 
     """
+    
+    raw_seconds = (ds['time'].values - np.nanmin(ds['time'].values))
+    if "float" not in str(ds.time.dtype):
+        raw_seconds = raw_seconds / np.timedelta64(1, 's')
+    vert_spd = np.gradient(-gsw.z_from_p(ds['pressure'].values, ds['latitude'].values), raw_seconds)
 
-    vert_spd = np.gradient(
-        -gsw.z_from_p(ds['pressure'].values, ds['latitude'].values),
-        ds["time"].values.astype('float')) * 1e9
     spd = np.abs(vert_spd / np.sin(np.deg2rad(ds['pitch'].values)))
 
     spd[spd < 0.01] = 0.01
@@ -45,12 +47,12 @@ def correct_rbr_lag(ds):
 
     spd = spd * 100
 
-    raw_seconds = ds['time'].values.astype('float') / 1e9
-    raw_seconds = raw_seconds - np.nanmin(raw_seconds)
-
     raw_temp = ds['temperature'].values
 
-    Fs = np.mean(1 / np.gradient(raw_seconds))
+    Fs = np.median(1 / np.gradient(raw_seconds))
+    if not 0.01 < Fs < 100:
+        _log.warning(f"Bad calculated sampling frequency {str(Fs)} Hz. Abort correction")
+        return ds
     _log.info('Performing thermal mass correction... Assuming a sampling frequency of ' + str(Fs) + ' Hz.')
     fn = Fs / 2
 
@@ -64,7 +66,6 @@ def correct_rbr_lag(ds):
     b = 1 - 2 * a / alpha  # Lueck and Picklo (1990)
     for sample in np.arange(1, len(bias_temp)):
         bias_temp[sample] = -b[sample] * bias_temp[sample - 1] + a[sample] * (corr_temp[sample] - corr_temp[sample - 1])
-
     corr_temp = interp(raw_seconds, raw_temp, raw_seconds + 0.9)
 
     # Estimate effective temperature of the conductivity measurement (long thermal lag)
@@ -116,5 +117,6 @@ if __name__ == '__main__':
                         datefmt='%Y-%m-%d %H:%M:%S')
     import xarray as xr
     ds = xr.open_dataset("/home/callum/Downloads/new/M11/timeseries/mission_timeseries.nc")
-    dsnew = correct_rbr_lag(ds)
-    dsnew.to_netcdf("/home/callum/Downloads/new/M11/timeseries/mission_timeseries_corrected.nc")
+    ds = salinity_pressure_correction(ds)
+    ds = correct_rbr_lag(ds)
+    ds.to_netcdf("/home/callum/Downloads/new/M11/timeseries/mission_timeseries_corrected.nc")
