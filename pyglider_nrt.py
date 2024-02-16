@@ -47,6 +47,7 @@ def proc_nrt():
             nc_file = list(pathlib.Path(ts_dir).glob('*.nc'))[0]
             ds = xr.open_dataset(nc_file)
             max_time = ds.time.values.max()
+            ds.close()
         except IndexError:
             _log.info(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
             max_time = np.datetime64('1970-01-01')
