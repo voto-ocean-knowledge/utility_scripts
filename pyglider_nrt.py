@@ -1,13 +1,18 @@
+import glob
 import os
 import sys
 import pathlib
 import logging
+import numpy as np
+import xarray as xr
+import pandas as pd
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
 from process_pyglider import proc_pyglider_l0
 from metocc import create_csv
+from utilities import natural_sort
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/pyglider_nrt.log',
                     filemode='a',
@@ -36,20 +41,21 @@ def proc_nrt():
         input_dir = f"/data/data_raw/nrt/SEA{glider.zfill(3)}/{mission.zfill(6)}/C-Csv/"
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
         gridfiles_dir = f"{output_dir}gridfiles/"
+        ts_dir = f"{output_dir}/timeseries/"
         proc_steps = (0, 1, 1, 1)
         try:
-            nc_file = list(pathlib.Path(gridfiles_dir).glob('*.nc'))[0]
-            nc_time = nc_file.lstat().st_mtime
+            nc_file = list(pathlib.Path(ts_dir).glob('*.nc'))[0]
+            ds = xr.open_dataset(nc_file)
+            max_time = ds.time.values.max()
         except IndexError:
             _log.info(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
-            nc_time = 0
+            max_time = np.datetime64('1970-01-01')
             proc_steps = (1, 1, 1, 1)
-        infile_time = 1
-        in_files = list(pathlib.Path(input_dir).glob('*'))
-        for file in in_files:
-            if file.lstat().st_mtime > infile_time:
-                infile_time = file.lstat().st_mtime
-        if nc_time > infile_time:
+        in_files = natural_sort(glob.glob(f'{input_dir}*pld1*'))
+        max_dive_file = in_files[-1]
+        df = pd.read_csv(max_dive_file, sep=';', parse_dates=True, index_col=0, dayfirst=True)
+        file_time = df.index.max()
+        if max_time + np.timedelta64(10, "m") > file_time:
             _log.info(f"No new SEA{glider} M{mission} input files")
             continue
         if not pathlib.Path(f"/data/deployment_yaml/mission_yaml/SEA{glider}_M{mission}.yml").exists():
