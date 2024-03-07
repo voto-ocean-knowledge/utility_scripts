@@ -15,7 +15,7 @@ with open("email_secrets.json") as json_file:
     secrets = json.load(json_file)
 
 explained_missions = ((67, 15), (61, 63), (56, 27), (66, 31), (45, 58), (61, 48), (45, 37), (45, 54), (44, 48),
-                      (55, 16), (63, 40), (66, 45), (45, 74))
+                      (55, 16), (63, 40), (66, 45), (45, 74), (66, 50))
 skip_projects = ["1_Folder_Template", "2_Simulations", "3_SAT_Missions", "10_Oman_001", "8_KAMI-KZ_001",
                  "11_Amundsen_Sea"]
 
