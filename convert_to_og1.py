@@ -42,10 +42,10 @@ def convert_to_og1(ds, parameters=False):
         dsa[var_name] = ('N_MEASUREMENTS', ds[var_name].values[:10], ds[var_name].attrs)
         qc_name = f'{var_name}_QC'
         if qc_name in list(ds):
-            dsa[qc_name] = ('N_MEASUREMENTS', ds[qc_name].values[:10].astype(int), ds[qc_name].attrs)
+            dsa[qc_name] = ('N_MEASUREMENTS', ds[qc_name].values[:10].astype("int8"), ds[qc_name].attrs)
             dsa[qc_name].attrs['long_name'] = f'{dsa[var_name].attrs["long_name"]} Quality Flag'
             dsa[qc_name].attrs['standard_name'] = 'status_flag'
-            dsa[qc_name].attrs['flag_values'] = (1, 2, 3, 4, 9)
+            dsa[qc_name].attrs['flag_values'] = np.array((1, 2, 3, 4, 9)).astype("int8")
             dsa[qc_name].attrs['flag_meanings'] = 'GOOD UNKNOWN SUSPECT FAIL MISSING'
             dsa[var_name].attrs['ancillary_variables'] = qc_name
     dsa = dsa.set_coords(('TIME', 'LATITUDE', 'LONGITUDE', 'DEPTH'))
@@ -67,9 +67,10 @@ def convert_to_og1(ds, parameters=False):
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
     attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/27/'
-    attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org'
+    attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , '
     attrs['contributor_role_vocabulary'] = 'http://vocab.nerc.ac.uk/search_nvs/W08/'
     attrs['contributor_role'] = 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,'
+    attrs['date_modified'] = attrs['date_created']
     attrs['institution_role'] = 'principal investigator '
     attrs['institution_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/C86/current/'
     attrs['data_url'] = f"https://erddap.observations.voiceoftheocean.org/erddap/tabledap/{attrs['dataset_id']}"
@@ -106,7 +107,7 @@ new_names = {
     'temperature': 'TEMP',
     'salinity': 'PSAL',
     'density': 'DENSITY',
-    'profile_index': 'profile_index',
+    'profile_index': 'PROFILE_NUMBER',
     'nav_state': 'PHASE',
 }
 
@@ -237,10 +238,11 @@ attrs_dict = {
                 'valid_max': 1040,
                 'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/DENSITY/'
                 },
-    "profile_index": {'long_name': 'profile index',
+    "PROFILE_NUMBER": {'long_name': 'profile index',
                       'units': '1'
                       },
     'PHASE': {'long_name': 'behavior of the glider at sea',
+              'comment': 'This is the variable NAV_STATE from the SeaExplorer nav file',
               'units': '1'},
 
 }

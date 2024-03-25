@@ -9,12 +9,7 @@ if __name__ == '__main__':
     ds_og1 = encode_times_og1(ds_og1)
     outfile = f"/home/callum/Documents/community/OG-format-user-manual/examples/{ds_og1.attrs['id']}.nc"
     cdl = f"/home/callum/Documents/community/OG-format-user-manual/examples/{ds_og1.attrs['id']}.cdl"
-    outfile = f"/home/callum/Downloads/{ds_og1.attrs['id']}.nc"
     ds_og1.to_netcdf(outfile)
-
-
-def new():
     my_cmd = ['ncdump', outfile]
     with open(cdl, "w") as outfile:
         subprocess.run(my_cmd, stdout=outfile)
-    ds_og1.to_netcdf("/home/callum/Documents/erddap/local_dev/erddap-gold-standard/datasets/og1_candidate.nc")
