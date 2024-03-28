@@ -1,8 +1,83 @@
-
 import pandas as pd
 import numpy as np
 import xarray as xr
 from utilities import encode_times_og1
+
+instrument_vocabs = {
+    "RBR legato CTD": {
+                       'type': 'CTD',
+                       'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
+                       'maker': 'RBR',
+                       'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
+                       'model': 'RBR Legato3 CTD',
+                       'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
+                       'long_name': 'RBR Legato3 CTD',
+                       },
+    "Wetlabs FLBBCD": {
+                       'type': 'fluorometers',
+                       'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+                       'maker': 'WET Labs',
+                       'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+                       'model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
+                       'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
+                       'long_name': 'WET Labs ECO-FLBBCD',
+                       },
+    "Nortek AD2CP": {
+        'type': 'ADVs and turbulence probes',
+        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
+        'maker': 'Nortek',
+        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/',
+        'model': 'Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler',
+        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/',
+        'long_name': 'Nortek AD2CP',
+    },
+    "JFE Advantech AROD_FT": {
+        'type': 'dissolved gas sensors',
+        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'maker': 'JFE Advantech',
+        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/',
+        'model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
+        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
+        'long_name': 'JFE Rinko ARO-FT',
+    },
+}
+
+
+def add_instruments(ds, dsa):
+    attrs = ds.attrs
+    instruments = []
+    for key, var in attrs.items():
+        if type(var) != str:
+            continue
+        if '{' not in var:
+            continue
+        if type(eval(var)) == dict:
+            instruments.append(key)
+
+    for instr in instruments:
+        attr_dict = eval(attrs[instr])
+        if attr_dict['make_model'] not in instrument_vocabs.keys():
+            print(attr_dict['make_model'], "not found")
+            continue
+        var_dict = instrument_vocabs[attr_dict['make_model']]
+        if 'serial' in attr_dict.keys():
+            var_dict['serial_number'] = str(attr_dict['serial'])
+            var_dict['long_name'] += f":str(attr_dict['serial'])"
+        for var_name in ['calibration_date', 'calibration_parameters']:
+            if var_name in attr_dict.keys():
+                var_dict[var_name] = str(attr_dict[var_name])
+        da = xr.DataArray(attrs=var_dict)
+        dsa[f"instrument_{var_dict['type']}_{var_dict['serial_number']}".upper().replace(' ', '_')] = da
+
+    for key, var in attrs.copy().items():
+        if type(var) != str:
+            continue
+        if '{' not in var:
+            continue
+        if type(eval(var)) == dict:
+            attrs.pop(key)
+    ds.attrs = attrs
+    return ds, dsa
 
 
 def convert_to_og1(ds, parameters=False):
@@ -48,21 +123,25 @@ def convert_to_og1(ds, parameters=False):
             dsa[qc_name].attrs['flag_values'] = np.array((1, 2, 3, 4, 9)).astype("int8")
             dsa[qc_name].attrs['flag_meanings'] = 'GOOD UNKNOWN SUSPECT FAIL MISSING'
             dsa[var_name].attrs['ancillary_variables'] = qc_name
+    if "time" in str(dsa.TIME.dtype):
+        var_name = "TIME"
+        dsa[var_name].values = dsa[var_name].values.astype(float)
+        if np.nanmean(dsa[var_name].values) > 1e12:
+            dsa[var_name].values = dsa[var_name].values / 1e9
     dsa = dsa.set_coords(('TIME', 'LATITUDE', 'LONGITUDE', 'DEPTH'))
     for vname in ['LATITUDE', 'LONGITUDE', 'TIME']:
         dsa[f'{vname}_GPS'] = dsa[vname].copy()
-        if vname == 'TIME':
-            dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.datetime64('NaT')
-        else:
-            dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.nan
+        dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.nan
         dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname} of each GPS location'
-
+    if 'PHASE' in dsa.variables:
+        dsa = dsa.drop_vars(["PHASE"])
+    ds, dsa = add_instruments(ds, dsa)
+    attrs = ds.attrs
     if parameters:
         dsa["PARAMETER"] = ("N_PARAMETERS", PARAMETER, {})
         dsa["PARAMETER_SENSOR"] = ("N_PARAMETERS", PARAMETER_SENSOR, {})
         dsa["PARAMETER_UNITS"] = ("N_PARAMETERS", PARAMETER_UNITS, {})
-    attrs = ds.attrs
-    ts = pd.to_datetime(str(dsa.TIME.values[0])).strftime('%Y%m%dT%H%M')
+    ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
     attrs['id'] = f"SEA{str(attrs['glider_serial']).zfill(3)}_{ts}_nrt"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
@@ -79,9 +158,9 @@ def convert_to_og1(ds, parameters=False):
     attrs['featureType'] = 'trajectory'
     attrs['Conventions'] = 'CF-1.8, OG-1.0'
     dsa.attrs = attrs
-    dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'}).astype(f'S{len(ds.attrs["id"])}')
-    dsa['WMO_IDENTIFIER'] = xr.DataArray(ds.attrs['wmo_id'], attrs={'long_name': 'wmo id'}).astype(f'S{len(ds.attrs["wmo_id"])}')
-    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider'}).astype(f'S{len(ds.attrs["glider_model"])}')
+    dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'})
+    dsa['WMO_IDENTIFIER'] = xr.DataArray(ds.attrs['wmo_id'], attrs={'long_name': 'wmo id'})
+    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider'})
     dsa['DEPLOYMENT_TIME'] = np.nanmin(dsa.TIME.values)
     dsa['DEPLOYMENT_TIME'].attrs = {'long_name': 'date of deployment',
                                     'standard_name': 'time',
@@ -141,7 +220,7 @@ attrs_dict = {
             'observation_type': 'measured',
             'standard_name': 'time',
             'units': 'seconds since 1970-01-01 00:00:00 UTC',
-            'calendar': "julian",
+            'calendar': "gregorian",
             'axis': 'T',
             'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/AYMD/',
         },
@@ -239,8 +318,8 @@ attrs_dict = {
                 'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/DENSITY/'
                 },
     "PROFILE_NUMBER": {'long_name': 'profile index',
-                      'units': '1'
-                      },
+                       'units': '1'
+                       },
     'PHASE': {'long_name': 'behavior of the glider at sea',
               'comment': 'This is the variable NAV_STATE from the SeaExplorer nav file',
               'units': '1'},
