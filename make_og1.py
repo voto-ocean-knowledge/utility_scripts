@@ -1,5 +1,5 @@
 import xarray as xr
-from convert_to_og1 import convert_to_og1, standardise_og10, new_names, attrs_dict, encode_times_og1
+from convert_to_og1 import convert_to_og1, standardise_og10
 import subprocess
 
 if __name__ == '__main__':

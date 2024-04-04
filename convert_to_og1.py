@@ -5,23 +5,23 @@ from utilities import encode_times_og1
 
 instrument_vocabs = {
     "RBR legato CTD": {
-                       'type': 'CTD',
-                       'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
-                       'maker': 'RBR',
-                       'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
-                       'model': 'RBR Legato3 CTD',
-                       'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
-                       'long_name': 'RBR Legato3 CTD',
-                       },
+        'type': 'CTD',
+        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
+        'maker': 'RBR',
+        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
+        'model': 'RBR Legato3 CTD',
+        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
+        'long_name': 'RBR Legato3 CTD',
+    },
     "Wetlabs FLBBCD": {
-                       'type': 'fluorometers',
-                       'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
-                       'maker': 'WET Labs',
-                       'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
-                       'model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
-                       'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
-                       'long_name': 'WET Labs ECO-FLBBCD',
-                       },
+        'type': 'fluorometers',
+        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'maker': 'WET Labs',
+        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
+        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
+        'long_name': 'WET Labs ECO-FLBBCD',
+    },
     "Nortek AD2CP": {
         'type': 'ADVs and turbulence probes',
         'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
@@ -42,6 +42,13 @@ instrument_vocabs = {
     },
 }
 
+variables_instruments = {'CNDC': 'CTD',
+                         'DOXY': 'dissolved gas sensors',
+                         'PRES': 'CTD',
+                         'PSAL': 'CTD',
+                         'TEMP': 'CTD',
+                         }
+
 
 def add_instruments(ds, dsa):
     attrs = ds.attrs
@@ -54,6 +61,7 @@ def add_instruments(ds, dsa):
         if type(eval(var)) == dict:
             instruments.append(key)
 
+    instrument_name_type = {}
     for instr in instruments:
         attr_dict = eval(attrs[instr])
         if attr_dict['make_model'] not in instrument_vocabs.keys():
@@ -62,12 +70,14 @@ def add_instruments(ds, dsa):
         var_dict = instrument_vocabs[attr_dict['make_model']]
         if 'serial' in attr_dict.keys():
             var_dict['serial_number'] = str(attr_dict['serial'])
-            var_dict['long_name'] += f":str(attr_dict['serial'])"
+            var_dict['long_name'] += f":{str(attr_dict['serial'])}"
         for var_name in ['calibration_date', 'calibration_parameters']:
             if var_name in attr_dict.keys():
                 var_dict[var_name] = str(attr_dict[var_name])
         da = xr.DataArray(attrs=var_dict)
-        dsa[f"instrument_{var_dict['type']}_{var_dict['serial_number']}".upper().replace(' ', '_')] = da
+        instrument_var_name = f"instrument_{var_dict['type']}_{var_dict['serial_number']}".upper().replace(' ', '_')
+        dsa[instrument_var_name] = da
+        instrument_name_type[var_dict['type']] = instrument_var_name
 
     for key, var in attrs.copy().items():
         if type(var) != str:
@@ -77,6 +87,12 @@ def add_instruments(ds, dsa):
         if type(eval(var)) == dict:
             attrs.pop(key)
     ds.attrs = attrs
+
+    for key, instrument_type in variables_instruments.items():
+        if key in dsa.variables:
+            instr_key = instrument_name_type[instrument_type]
+            dsa[key].attrs['sensor'] = instr_key
+
     return ds, dsa
 
 
@@ -142,16 +158,17 @@ def convert_to_og1(ds, parameters=False):
         dsa["PARAMETER_SENSOR"] = ("N_PARAMETERS", PARAMETER_SENSOR, {})
         dsa["PARAMETER_UNITS"] = ("N_PARAMETERS", PARAMETER_UNITS, {})
     ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
-    attrs['id'] = f"SEA{str(attrs['glider_serial']).zfill(3)}_{ts}_nrt"
+    attrs['id'] = f"SEA{str(attrs['glider_serial']).zfill(3)}_{ts}_R"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
     attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/27/'
     attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , '
-    attrs['contributor_role_vocabulary'] = 'http://vocab.nerc.ac.uk/search_nvs/W08/'
+    attrs['contributor_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/'
     attrs['contributor_role'] = 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,'
     attrs['date_modified'] = attrs['date_created']
-    attrs['institution_role'] = 'principal investigator '
-    attrs['institution_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/C86/current/'
+    attrs['agency'] = 'Voice of the Ocean'
+    attrs['agency_role'] = 'contact point'
+    attrs['agency_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/C86/current/'
     attrs['data_url'] = f"https://erddap.observations.voiceoftheocean.org/erddap/tabledap/{attrs['dataset_id']}"
     attrs['rtqc_method'] = "IOOS QC QARTOD https://github.com/ioos/ioos_qc"
     attrs['rtqc_method_doi'] = "None"
