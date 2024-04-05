@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import xarray as xr
-from utilities import encode_times_og1
+from utilities import encode_times_og1, set_best_dtype
 
 instrument_vocabs = {
     "RBR legato CTD": {
@@ -188,6 +188,7 @@ def convert_to_og1(ds, parameters=False):
     dsa['DEPLOYMENT_LONGITUDE'] = dsa.LONGITUDE.values[0]
     dsa['DEPLOYMENT_LONGITUDE'].attrs = {'long_name': 'longitude of deployment'}
     dsa = encode_times_og1(dsa)
+    dsa = set_best_dtype(dsa)
     return dsa
 
 

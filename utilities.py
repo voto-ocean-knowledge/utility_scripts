@@ -61,18 +61,17 @@ def encode_times(ds):
 
 
 def encode_times_og1(ds):
-    for var_name in list(ds) + list(ds.coords):
+    for var_name in ds.variables:
         if 'axis' in ds[var_name].attrs.keys():
             ds[var_name].attrs.pop('axis')
-        if 'positive' in ds[var_name].attrs.keys():
-            ds[var_name].attrs.pop('positive')
         if "time" in var_name.lower():
             for drop_attr in ['units', 'calendar', 'dtype']:
                 if drop_attr in ds[var_name].attrs.keys():
                     ds[var_name].attrs.pop(drop_attr)
                 if drop_attr in ds[var_name].encoding.keys():
                     ds[var_name].encoding.pop(drop_attr)
-            ds[var_name].encoding["units"] = 'seconds since 1970-01-01T00:00:00Z'
+            ds[var_name].attrs["units"] = "seconds since 1970-01-01T00:00:00Z"
+            ds[var_name].attrs["calendar"] = "gregorian"
     return ds
 
 
