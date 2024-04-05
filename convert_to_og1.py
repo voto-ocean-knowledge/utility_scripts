@@ -356,6 +356,7 @@ def standardise_og10(ds):
             if qc_name in list(ds):
                 dsa[f'{name}_QC'] = ('time', ds[qc_name].values, ds[qc_name].attrs)
                 dsa[name].attrs['ancillary_variables'] = f'{name}_QC'
+    dsa = set_best_dtype(dsa)
     return dsa
 
 

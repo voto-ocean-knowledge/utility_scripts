@@ -77,8 +77,10 @@ def encode_times_og1(ds):
 
 def find_best_dtype(var_name, da):
     input_dtype = da.dtype.type
-    if var_name[-2:] == "qc":
+    if var_name[-2:].lower() == "qc":
         return np.int8
+    if "time" in var_name.lower():
+        return input_dtype
     if var_name[-3:] == "raw" or "int" in str(input_dtype):
         if np.nanmax(da.values) < 2 ** 16 / 2:
             return np.int16
@@ -100,6 +102,9 @@ def set_best_dtype(ds):
         da = ds[var_name]
         input_dtype = da.dtype.type
         new_dtype = find_best_dtype(var_name, da)
+        for att in ['valid_min', 'valid_max']:
+            if att in da.attrs.keys():
+                da.attrs[att] = np.array(da.attrs[att]).astype(new_dtype)
         if new_dtype == input_dtype:
             continue
         _log.debug(f"{var_name} input dtype {input_dtype} change to {new_dtype}")
