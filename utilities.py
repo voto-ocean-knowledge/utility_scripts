@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 import subprocess
+from pathlib import Path
 _log = logging.getLogger(__name__)
 
 
@@ -142,4 +143,10 @@ def sensor_sampling_period(glider, mission):
 def mailer(subject, message, recipient="callum.rollo@voiceoftheocean.org"):
     _log.warning(f"email: {subject}, {message}, {recipient}")
     subject = subject.replace(" ", "-")
-    subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send.sh", message, subject, recipient])
+    send_script = None
+    for possible_loc in ["/home/pipeline/utility_scripts/send.sh",
+                         "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh"]:
+        if Path(possible_loc).exists():
+            send_script = possible_loc
+            break
+    subprocess.check_call(['/usr/bin/bash', send_script, message, subject, recipient])

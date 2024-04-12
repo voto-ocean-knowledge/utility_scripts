@@ -10,38 +10,6 @@ script_dir = pathlib.Path(__file__).parent.absolute()
 os.chdir(script_dir)
 
 
-def main():
-    e = ERDDAP(
-        server="https://erddap.observations.voiceoftheocean.org/erddap",
-        protocol="tabledap",
-    )
-    # Fetch dataset list
-    e.response = "csv"
-    e.dataset_id = "allDatasets"
-    df_datasets = e.to_pandas(parse_dates=['minTime (UTC)', 'maxTime (UTC)'])
-    # drop the allDatasets row and make the datasetID the index for easier reading
-    df_datasets.set_index("datasetID", inplace=True)
-    df_datasets.drop("allDatasets", inplace=True)
-    df_datasets = df_datasets[~df_datasets.index.str.contains("ctd")]
-    enough_datasets(df_datasets)
-    df_datasets = nrt_vs_complete(df_datasets)
-    datasets_to_emodnet(df_datasets)
-    bad_depths(df_datasets)
-    bad_dataset_id(df_datasets)
-    delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
-    nrt = df_datasets.index[df_datasets.index.str[:3] == "nrt"]
-    num_ds = len(delayed)
-    num_nrt = len(nrt)
-    unit_check(e, nrt[np.random.randint(0, num_nrt-1)])
-    profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds-1)])
-    sensible_values(e, nrt[np.random.randint(0, num_ds-1)])
-    sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
-    interntional_waters_check(e, "nrt_SEA067_M27")
-    interntional_waters_check(e, nrt[np.random.randint(0, num_nrt-1)])
-    good_times()
-    manual_qc()
-
-
 def enough_datasets(df_datasets):
     total = int(len(df_datasets))
     nrt = int(sum(df_datasets.index.str[:3] == 'nrt'))
@@ -85,7 +53,7 @@ def nrt_vs_complete(df_datasets):
             time_since = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(minutes=0))) - \
                          df_nrt.loc[this_dataset]["maxTime (UTC)"]
             # print("last update: ", time_since)
-            if time_since > datetime.timedelta(days=3):
+            if time_since > datetime.timedelta(days=7):
                 msg = f"unprocessed complete dataset: {this_dataset}. {time_since} since last nrt data"
                 mailer("cherddap", msg)
 
@@ -93,6 +61,7 @@ def nrt_vs_complete(df_datasets):
         if this_dataset not in df_nrt.index:
             mailer("cherdap",f"{this_dataset} not found in nrt. Last update:", df_delayed.loc[this_dataset]["maxTime (UTC)"])
     return df_datasets
+
 
 def bad_depths(df_datasets):
     if len(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)']) > 0:
@@ -171,7 +140,7 @@ def unit_check(e, dataset_id):
                 mailer("cherddap", f"bad oxy units {attrs['units']}")
 
 
-def interntional_waters_check(e, dataset_id):
+def international_waters_check(e, dataset_id):
     e.dataset_id = dataset_id
     e.variables = [
         "longitude",
@@ -221,6 +190,7 @@ def datasets_to_emodnet(df_datasets):
         msg = f"failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP \n: {names_text}"
         mailer("cherddap", msg)
 
+
 def good_times():
     print("TODO: check times of all datetime like columns are in expected range")
     print("TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
@@ -230,5 +200,41 @@ def manual_qc():
     print("TODO: check that manually applied QC to vars like oxygen has been applied")
 
 
+def main():
+    e = ERDDAP(
+        server="https://erddap.observations.voiceoftheocean.org/erddap",
+        protocol="tabledap",
+    )
+    # Fetch dataset list
+    e.response = "csv"
+    e.dataset_id = "allDatasets"
+    df_datasets = e.to_pandas(parse_dates=['minTime (UTC)', 'maxTime (UTC)'])
+    # drop the allDatasets row and make the datasetID the index for easier reading
+    df_datasets.set_index("datasetID", inplace=True)
+    df_datasets.drop("allDatasets", inplace=True)
+    df_datasets = df_datasets[df_datasets.index.str.contains("SEA")]
+    enough_datasets(df_datasets)
+    df_datasets = nrt_vs_complete(df_datasets)
+    datasets_to_emodnet(df_datasets)
+    bad_depths(df_datasets)
+    bad_dataset_id(df_datasets)
+    delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
+    nrt = df_datasets.index[df_datasets.index.str[:3] == "nrt"]
+    num_ds = len(delayed)
+    num_nrt = len(nrt)
+    unit_check(e, nrt[np.random.randint(0, num_nrt-1)])
+    profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds-1)])
+    sensible_values(e, nrt[np.random.randint(0, num_ds-1)])
+    sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
+    international_waters_check(e, "nrt_SEA067_M27")
+    international_waters_check(e, nrt[np.random.randint(0, num_nrt-1)])
+    good_times()
+    manual_qc()
+
+
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        mailer("cherddap", "erddap checks failed")
+
