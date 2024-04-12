@@ -145,7 +145,8 @@ def mailer(subject, message, recipient="callum.rollo@voiceoftheocean.org"):
     subject = subject.replace(" ", "-")
     send_script = None
     for possible_loc in ["/home/pipeline/utility_scripts/send.sh",
-                         "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh"]:
+                         "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh",
+                         "/home/spongebob/Documents/utility_scripts/send.sh",]:
         if Path(possible_loc).exists():
             send_script = possible_loc
             break
