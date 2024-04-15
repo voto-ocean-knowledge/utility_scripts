@@ -54,7 +54,7 @@ def proc_nrt():
             proc_steps = (1, 1, 1, 1)
         in_files = natural_sort(glob.glob(f'{input_dir}*pld1*'))
         max_dive_file = in_files[-1]
-        df = pd.read_csv(max_dive_file, sep=';', parse_dates=True, index_col=0, dayfirst=True)
+        df = pd.read_csv(max_dive_file, sep=';', parse_dates=True, index_col=0, dayfirst=True, nrows=10)
         file_time = df.index.max()
         if max_time + np.timedelta64(10, "m") > file_time:
             _log.info(f"No new SEA{glider} M{mission} input files")
