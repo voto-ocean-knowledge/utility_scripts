@@ -1,4 +1,4 @@
-name: process
+name: sound
 channels:
   - conda-forge
 dependencies:
