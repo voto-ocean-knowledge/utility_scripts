@@ -177,17 +177,24 @@ def international_waters_check(e, dataset_id):
 def datasets_to_emodnet(df_datasets):
     df_nrt = df_datasets[df_datasets.mission_type == "nrt"]
     df_delayed = df_datasets[df_datasets.mission_type == "delayed"]
-    e_emodnet = ERDDAP("https://erddap.emodnet-physics.eu/erddap")
-    df_emodnet = pd.read_csv(e_emodnet.get_search_url(search_for="voto", response="csv"))
-    emodent_datasets = df_emodnet["Dataset ID"].values
-    lost_datasets = []
+    e_emodnet = ERDDAP("https://ingestion-erddap.emodnet-physics.eu/erddap", protocol='tabledap')
+    # Fetch dataset list
+    e_emodnet.response = "csv"
+    e_emodnet.dataset_id = "allDatasets"
+    df_datasets = e_emodnet.to_pandas(parse_dates=['minTime (UTC)', 'maxTime (UTC)'])
+    # drop the allDatasets row and make the datasetID the index for easier reading
+    df_datasets = df_datasets[df_datasets.datasetID.str.contains("VOTO")]
+    df_datasets = df_datasets[df_datasets.datasetID.str.contains("SEA")]
+    df_datasets['voto_datasetid'] = df_datasets.datasetID.str[5:]
+    emodent_datasets = df_datasets.voto_datasetid.values
     check_names = list(df_nrt.index) + list(df_delayed.index)
-    for ds_name in check_names:
-        if ds_name not in emodent_datasets:
-            lost_datasets.append(ds_name)
+    lost_datasets = set(check_names).difference(set(emodent_datasets))
+    most_recent_emodnet = df_datasets['maxTime (UTC)'].max()
+    most_recent_datasetid = df_datasets.iloc[df_datasets['maxTime (UTC)'].argmax()]['datasetID']
+    most_recent_str = f"Most recent dataset on EMODnet is {most_recent_datasetid}, maxTime: {most_recent_emodnet}"
     if len(lost_datasets) > 0:
         names_text = '\n'.join(lost_datasets)
-        msg = f"failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP \n: {names_text}"
+        msg = f"Failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP https://ingestion-erddap.emodnet-physics.eu/erddap.\n\n{most_recent_str}. \n\nMissing datasets \n {names_text}"
         mailer("cherddap", msg)
 
 
