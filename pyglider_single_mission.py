@@ -65,7 +65,7 @@ def process(glider, mission):
         raise ValueError(f"input dir {input_dir} does not contain gli and/or pld files")
     _log.info(f"Processing glider {glider} mission {mission}")
 
-    proc_pyglider_l0(glider, mission, args.kind, input_dir, output_dir)
+    proc_pyglider_l0(glider, mission, "raw", input_dir, output_dir)
     _log.info(f"Finished processing glider {glider} mission {mission}")
 
     from ad2cp_proc import proc_ad2cp_mission, adcp_data_present
