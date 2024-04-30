@@ -22,9 +22,9 @@ files_collection = (
     ("erddap_rsync.log", "total size is", 2),
     ("new_complete_mission.log", "Complete", 25),
     ("ctd_plots.log", "completed process all CTDs", 25),
-    ("glider_transect.log", "100", 2),
-    ("metadata_tables.log", "Tables successfully uploaded to ERDDAP", 2),
-    # ("voto_pipeline.log", "TO ADD", 2),
+    ("glider_transect.log", "End analysis", 2),
+    ("metadata_tables.log", "Tables successfully uploaded to ERDDAP", 25),
+    ("cherrdap.log", "ERDDAP checks complete", 25),
 )
 def check_log_file(file, expected_last_line, hours):
     file_loc = f"/data/log/{file}"
