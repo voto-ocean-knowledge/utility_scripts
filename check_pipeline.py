@@ -20,6 +20,7 @@ files_collection = (
     ("rsync_metocc.log", "total size is", 2),
     ("rsync_web.log", "total size is", 2),
     ("erddap_rsync.log", "total size is", 2),
+    ("seaex-rsync.log", "total size is", 2),
     ("new_complete_mission.log", "Complete", 25),
     ("ctd_plots.log", "completed process all CTDs", 25),
     ("glider_transect.log", "End analysis", 2),
