@@ -34,7 +34,9 @@ def check_log_file(file, expected_last_line, hours):
     except:
         skiplines = 0
     last_line = ""
-    dt = datetime.datetime(1970,1,1)
+    dt_base = datetime.datetime(1970,1,1)
+    dt_sh = datetime.datetime(1970,1,1)
+    dt_py = datetime.datetime(1970,1,1)
     with open(file_loc) as f:
         for i, line in enumerate(f):
             if i < skiplines:
@@ -43,14 +45,15 @@ def check_log_file(file, expected_last_line, hours):
                 last_line = line
                 match = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', line)
                 if match:
-                    dt = datetime.datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
-                match_bash = re.search(r'\D{3} \d{2} \d{2}:\d{2}:\d{2} UTC \d{4}', line)
-                if match_bash:
-                    dt = datetime.datetime.strptime(match_bash.group(), '%b %d %H:%M:%S UTC %Y')
+                    dt_py = datetime.datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                match_iso = re.search(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', line)
+                if match_iso:
+                    dt_sh = datetime.datetime.strptime(match_iso.group(), '%Y-%m-%dT%H:%M:%S')
     if expected_last_line not in last_line:
         msg = f"failed process: {file} ends in {last_line}"
         mailer("pipeline-error", msg)
         return
+    dt = max((dt_base, dt_py, dt_sh))
     if dt < datetime.datetime.now() - datetime.timedelta(hours=hours):
         msg = f"failed process: {file} last updates {dt}"
         mailer("pipeline-stale", msg)
