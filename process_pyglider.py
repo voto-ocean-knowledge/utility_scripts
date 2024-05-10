@@ -10,6 +10,7 @@ import xarray as xr
 from geocode import get_seas_merged_nav_nc
 from post_process_dataset import post_process
 from utilities import encode_times, set_best_dtype
+from file_operations import clean_nrt_bad_files
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
 qc_dir = parent_dir / "voto_glider_qc"
@@ -79,6 +80,7 @@ def set_profile_numbers(ds):
 def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir):
     if kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
+    clean_nrt_bad_files(input_dir)
     rawdir = input_dir + '/'
     output_path = pathlib.Path(output_dir)
     if not output_path.exists():

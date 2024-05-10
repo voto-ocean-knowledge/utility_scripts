@@ -8,9 +8,12 @@ import os
 from utilities import mailer
 script_dir = pathlib.Path(__file__).parent.absolute()
 os.chdir(script_dir)
+import logging
+_log = logging.getLogger(__name__)
 
 
 def enough_datasets(df_datasets):
+    _log.info("Check enough datasets")
     total = int(len(df_datasets))
     nrt = int(sum(df_datasets.index.str[:3] == 'nrt'))
     complete = int(sum(df_datasets.index.str[:3] == 'del'))
@@ -29,6 +32,7 @@ def enough_datasets(df_datasets):
 
 
 def nrt_vs_complete(df_datasets):
+    _log.info("Check nrt vs complete")
     mtype, glider, mission = [], [], []
     for gm in df_datasets.index:
         mission_type, g, m = gm.split("_")
@@ -64,11 +68,13 @@ def nrt_vs_complete(df_datasets):
 
 
 def bad_depths(df_datasets):
+    _log.info("Check bad depths")
     if len(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)']) > 0:
         mailer("cherddap", "bad altitude")
 
 
 def bad_dataset_id(df_datasets):
+    _log.info("Check bad datasets ids")
     # Find missions where the dataset ID number doesn't match the name. This indicates the wrong dataset has been loaded
     for dataset_id, row in df_datasets.iterrows():
         name = row["title"]
@@ -85,6 +91,7 @@ def bad_dataset_id(df_datasets):
 
 
 def profile_num_vs_dive_num(e, dataset_id):
+    _log.info(f"Check profile num vs dive num {dataset_id}")
     e.variables = [
         "time",
         "pressure",
@@ -107,6 +114,7 @@ def profile_num_vs_dive_num(e, dataset_id):
 
 
 def sensible_values(e, dataset_id):
+    _log.info(f"Check sensible values {dataset_id}")
     e.dataset_id = dataset_id
 
     ds = e.to_xarray()
@@ -129,6 +137,7 @@ def sensible_values(e, dataset_id):
 
 
 def unit_check(e, dataset_id):
+    _log.info(f"Check units {dataset_id}")
     e.dataset_id = dataset_id
 
     ds = e.to_xarray()
@@ -141,6 +150,7 @@ def unit_check(e, dataset_id):
 
 
 def international_waters_check(e, dataset_id):
+    _log.info(f"Check international waters {dataset_id}")
     e.dataset_id = dataset_id
     e.variables = [
         "longitude",
@@ -175,6 +185,7 @@ def international_waters_check(e, dataset_id):
 
 
 def datasets_to_emodnet(df_datasets):
+    _log.info("Check datasets to emodnet")
     df_nrt = df_datasets[df_datasets.mission_type == "nrt"]
     df_delayed = df_datasets[df_datasets.mission_type == "delayed"]
     e_emodnet = ERDDAP("https://ingestion-erddap.emodnet-physics.eu/erddap", protocol='tabledap')
@@ -199,12 +210,12 @@ def datasets_to_emodnet(df_datasets):
 
 
 def good_times():
-    print("TODO: check times of all datetime like columns are in expected range")
-    print("TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
+    _log.warning("TODO: check times of all datetime like columns are in expected range")
+    _log.warning("TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
 
 
 def manual_qc():
-    print("TODO: check that manually applied QC to vars like oxygen has been applied")
+    _log.warning("TODO: check that manually applied QC to vars like oxygen has been applied")
 
 
 def main():
@@ -222,7 +233,10 @@ def main():
     df_datasets = df_datasets[df_datasets.index.str.contains("SEA")]
     enough_datasets(df_datasets)
     df_datasets = nrt_vs_complete(df_datasets)
-    datasets_to_emodnet(df_datasets)
+    try:
+        datasets_to_emodnet(df_datasets)
+    except:
+        mailer("cherddap", "emodnet check failed")
     bad_depths(df_datasets)
     bad_dataset_id(df_datasets)
     delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
@@ -240,8 +254,11 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except:
-        mailer("cherddap", "erddap checks failed")
-
+    logging.basicConfig(filename='/home/pipeline/log/cherrdap.log',
+                        filemode='a',
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        level=logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    _log.info("Start ERDDAP checks")
+    main()
+    _log.info("ERDDAP checks complete")
