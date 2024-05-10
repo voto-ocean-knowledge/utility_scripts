@@ -158,7 +158,7 @@ def convert_to_og1(ds, parameters=False):
         dsa["PARAMETER_SENSOR"] = ("N_PARAMETERS", PARAMETER_SENSOR, {})
         dsa["PARAMETER_UNITS"] = ("N_PARAMETERS", PARAMETER_UNITS, {})
     ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
-    attrs['id'] = f"SEA{str(attrs['glider_serial']).zfill(3)}_{ts}_R"
+    attrs['id'] = f"sea{str(attrs['glider_serial']).zfill(3)}_{ts}_R"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
     attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/27/'
@@ -174,6 +174,7 @@ def convert_to_og1(ds, parameters=False):
     attrs['rtqc_method_doi'] = "None"
     attrs['featureType'] = 'trajectory'
     attrs['Conventions'] = 'CF-1.8, OG-1.0'
+    attrs['comment'] = 'Dataset for demonstration purposes only. Original dataset truncated for the sake of simplicity'
     dsa.attrs = attrs
     dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'})
     dsa['WMO_IDENTIFIER'] = xr.DataArray(ds.attrs['wmo_id'], attrs={'long_name': 'wmo id'})
