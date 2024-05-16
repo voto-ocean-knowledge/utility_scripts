@@ -348,7 +348,7 @@ def main():
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
         ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
-         "usrerddap@13.51.101.57:/media/data/ctd/ctd_deployment.nc"])
+         "usrerddap@136.243.54.252/data/ctd/ctd_deployment.nc"])
 
 
 if __name__ == '__main__':

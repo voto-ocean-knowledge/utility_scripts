@@ -65,6 +65,12 @@ def process(glider, mission):
         raise ValueError(f"input dir {input_dir} does not contain gli and/or pld files")
     _log.info(f"Processing glider {glider} mission {mission}")
 
+    sys.path.append(str(parent_dir / "voto-web/voto/bin"))
+    # noinspection PyUnresolvedReferences
+    from add_profiles import init_db, add_complete_profiles
+    init_db()
+    add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
+    _log.info("Finished add to database")
     proc_pyglider_l0(glider, mission, "raw", input_dir, output_dir)
     _log.info(f"Finished processing glider {glider} mission {mission}")
 
@@ -79,12 +85,7 @@ def process(glider, mission):
     from complete_mission_plots import complete_plots
     complete_plots(glider, mission)
     _log.info("Finished plot creation")
-    sys.path.append(str(parent_dir / "voto-web/voto/bin"))
-    # noinspection PyUnresolvedReferences
-    from add_profiles import init_db, add_complete_profiles
-    init_db()
-    add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
-    _log.info("Finished add to database")
+
 
     subprocess.check_call(
         ['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(glider), str(mission)])
