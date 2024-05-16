@@ -2,6 +2,7 @@ import gsw
 import numpy as np
 from scipy.interpolate import interp1d
 import logging
+import pandas as pd
 
 _log = logging.getLogger(__name__)
 
@@ -26,6 +27,10 @@ def salinity_pressure_correction(ds):
     return ds
 
 
+def pandas_fill(arr):
+    return pd.DataFrame(arr).bfill().values[:, 0]
+
+
 def correct_rbr_lag(ds):
     """
     Thermal lag from Thermal Inertia of Conductivity Cells: Observations with a Sea-Bird Cell
@@ -33,7 +38,6 @@ def correct_rbr_lag(ds):
     :param data: 
     :return: 
     """
-    
     raw_seconds = (ds['time'].values - np.nanmin(ds['time'].values))
     if "float" not in str(ds.time.dtype):
         raw_seconds = raw_seconds / np.timedelta64(1, 's')
@@ -67,6 +71,7 @@ def correct_rbr_lag(ds):
     for sample in np.arange(1, len(bias_temp)):
         bias_temp[sample] = -b[sample] * bias_temp[sample - 1] + a[sample] * (corr_temp[sample] - corr_temp[sample - 1])
     corr_temp = interp(raw_seconds, raw_temp, raw_seconds + 0.9)
+    corr_temp = pandas_fill(corr_temp)
 
     # Estimate effective temperature of the conductivity measurement (long thermal lag)
     alpha = 0.18 * spd ** (-1.10)
@@ -89,6 +94,8 @@ def correct_rbr_lag(ds):
 
     corr_sal = gsw.SP_from_C(ds['conductivity'].values, corr_temp - bias_long - bias_short,
                              ds['pressure'].values)
+    corr_temp[np.isnan(ds['temperature'].values)] = np.nan
+    corr_sal[np.isnan(ds['salinity'].values)] = np.nan
 
     ds['temperature'].values = corr_temp
     ds['salinity'].values = corr_sal

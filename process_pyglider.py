@@ -1,4 +1,3 @@
-import datetime
 import os
 import sys
 import pathlib
@@ -80,8 +79,9 @@ def set_profile_numbers(ds):
 def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir):
     if kind not in ['raw', 'sub']:
         raise ValueError('kind must be raw or sub')
-    clean_nrt_bad_files(input_dir)
-    rawdir = input_dir + '/'
+    if kind == 'sub':
+        clean_nrt_bad_files(input_dir)
+    rawdir = str(pathlib.Path(input_dir)) + '/'
     output_path = pathlib.Path(output_dir)
     if not output_path.exists():
         output_path.mkdir(parents=True)
@@ -142,24 +142,4 @@ def proc_pyglider_l0(glider, mission, kind, input_dir, output_dir):
     ncprocess.make_L0_gridfiles(outname, griddir, deploymentyaml)
 
 
-if __name__ == '__main__':
-    import logging
-    logf = f"/data/log/new_glider.log"
-    logging.basicConfig(filename=logf,
-                        filemode='w',
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    start = datetime.datetime.now()
-    glider = 44
-    mission = 85
-    kind = 'sub'
-    input_dir = '/data/data_raw/nrt/SEA044/000085/C-Csv/'
-    output_dir = '/data/data_l0_pyglider/nrt/SEA44/M85/'
-    proc_pyglider_l0(glider, mission, kind, input_dir, output_dir)
-    print(datetime.datetime.now() - start)
-    kind = 'raw'
-    input_dir = '/data/data_raw/complete_mission/SEA44/M85/'
-    output_dir = '/data/data_l0_pyglider/complete_mission/SEA44/M85/'
-    #proc_pyglider_l0(glider, mission, kind, input_dir, output_dir)
-    print(datetime.datetime.now() - start)
+

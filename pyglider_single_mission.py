@@ -64,6 +64,8 @@ def process(glider, mission):
     if len(in_files_gli) == 0 or len(in_files_pld) == 0:
         raise ValueError(f"input dir {input_dir} does not contain gli and/or pld files")
     _log.info(f"Processing glider {glider} mission {mission}")
+    proc_pyglider_l0(glider, mission, "raw", input_dir, output_dir)
+    _log.info(f"Finished processing glider {glider} mission {mission}")
 
     sys.path.append(str(parent_dir / "voto-web/voto/bin"))
     # noinspection PyUnresolvedReferences
@@ -71,8 +73,6 @@ def process(glider, mission):
     init_db()
     add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
     _log.info("Finished add to database")
-    proc_pyglider_l0(glider, mission, "raw", input_dir, output_dir)
-    _log.info(f"Finished processing glider {glider} mission {mission}")
 
     from ad2cp_proc import proc_ad2cp_mission, adcp_data_present
     if adcp_data_present(glider, mission):
