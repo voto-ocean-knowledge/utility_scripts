@@ -78,6 +78,8 @@ def encode_times_og1(ds):
 
 def find_best_dtype(var_name, da):
     input_dtype = da.dtype.type
+    if "latitude" in var_name.lower() or "longitude" in var_name.lower():
+        return np.double
     if var_name[-2:].lower() == "qc":
         return np.int8
     if "time" in var_name.lower():

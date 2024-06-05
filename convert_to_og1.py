@@ -5,39 +5,39 @@ from utilities import encode_times_og1, set_best_dtype
 
 instrument_vocabs = {
     "RBR legato CTD": {
-        'type': 'CTD',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
-        'maker': 'RBR',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
-        'model': 'RBR Legato3 CTD',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
+        'sensor_type': 'CTD',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
+        'sensor_maker': 'RBR',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
+        'sensor_model': 'RBR Legato3 CTD',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
         'long_name': 'RBR Legato3 CTD',
     },
     "Wetlabs FLBBCD": {
-        'type': 'fluorometers',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
-        'maker': 'WET Labs',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
-        'model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
         'long_name': 'WET Labs ECO-FLBBCD',
     },
     "Nortek AD2CP": {
-        'type': 'ADVs and turbulence probes',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
-        'maker': 'Nortek',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/',
-        'model': 'Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/',
+        'sensor_type': 'ADVs and turbulence probes',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
+        'sensor_maker': 'Nortek',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/',
+        'sensor_model': 'Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/',
         'long_name': 'Nortek AD2CP',
     },
     "JFE Advantech AROD_FT": {
-        'type': 'dissolved gas sensors',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
-        'maker': 'JFE Advantech',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/',
-        'model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
+        'sensor_type': 'dissolved gas sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'sensor_maker': 'JFE Advantech',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/',
+        'sensor_model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
         'long_name': 'JFE Rinko ARO-FT',
     },
 }
@@ -75,9 +75,9 @@ def add_instruments(ds, dsa):
             if var_name in attr_dict.keys():
                 var_dict[var_name] = str(attr_dict[var_name])
         da = xr.DataArray(attrs=var_dict)
-        instrument_var_name = f"instrument_{var_dict['type']}_{var_dict['serial_number']}".upper().replace(' ', '_')
+        instrument_var_name = f"sensor_{var_dict['sensor_type']}_{var_dict['serial_number']}".upper().replace(' ', '_')
         dsa[instrument_var_name] = da
-        instrument_name_type[var_dict['type']] = instrument_var_name
+        instrument_name_type[var_dict['sensor_type']] = instrument_var_name
 
     for key, var in attrs.copy().items():
         if type(var) != str:
@@ -148,9 +148,19 @@ def convert_to_og1(ds, parameters=False):
     for vname in ['LATITUDE', 'LONGITUDE', 'TIME']:
         dsa[f'{vname}_GPS'] = dsa[vname].copy()
         dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.nan
-        dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname} of each GPS location'
-    if 'PHASE' in dsa.variables:
-        dsa = dsa.drop_vars(["PHASE"])
+        dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname.lower()} of each GPS location'
+    seaex_phase = dsa['PHASE'].values
+    standard_phase = np.zeros(len(seaex_phase))
+    standard_phase[seaex_phase == 115] = 3
+    standard_phase[seaex_phase == 116] = 3
+    standard_phase[seaex_phase == 119] = 3
+    standard_phase[seaex_phase == 110] = 5
+    standard_phase[seaex_phase == 118] = 5
+    standard_phase[seaex_phase == 100] = 2
+    standard_phase[seaex_phase == 117] = 1
+    dsa['PHASE'].values = standard_phase
+    dsa['PHASE'].attrs = {'long_name': "behavior of the glider at sea",
+                          'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'}
     ds, dsa = add_instruments(ds, dsa)
     attrs = ds.attrs
     if parameters:
@@ -165,6 +175,9 @@ def convert_to_og1(ds, parameters=False):
     attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , '
     attrs['contributor_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/'
     attrs['contributor_role'] = 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,'
+    attrs['contributing_institutions'] = 'Voice of the Ocean Foundation'
+    attrs['contributing_institutions_role'] = 'Operator'
+    attrs['contributing_institutions_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/current/'
     attrs['date_modified'] = attrs['date_created']
     attrs['agency'] = 'Voice of the Ocean'
     attrs['agency_role'] = 'contact point'
@@ -173,12 +186,15 @@ def convert_to_og1(ds, parameters=False):
     attrs['rtqc_method'] = "IOOS QC QARTOD https://github.com/ioos/ioos_qc"
     attrs['rtqc_method_doi'] = "None"
     attrs['featureType'] = 'trajectory'
-    attrs['Conventions'] = 'CF-1.8, OG-1.0'
+    attrs['Conventions'] = 'CF-1.10, OG-1.0'
     attrs['comment'] = 'Dataset for demonstration purposes only. Original dataset truncated for the sake of simplicity'
+    attrs['start_date'] = attrs['time_coverage_start']
     dsa.attrs = attrs
     dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'})
     dsa['WMO_IDENTIFIER'] = xr.DataArray(ds.attrs['wmo_id'], attrs={'long_name': 'wmo id'})
-    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider'})
+    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider',
+                                                                          'platform_model_vocabulary': "None"})
+    dsa['PLATFORM_SERIAL_NUMBER'] = xr.DataArray(f"sea{ds.attrs['glider_serial'].zfill(3)}", attrs={'long_name': 'glider serial number'})
     dsa['DEPLOYMENT_TIME'] = np.nanmin(dsa.TIME.values)
     dsa['DEPLOYMENT_TIME'].attrs = {'long_name': 'date of deployment',
                                     'standard_name': 'time',
@@ -211,7 +227,7 @@ new_names = {
 
 attrs_dict = {
     "LATITUDE": {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-                 'long_name': 'latitude',
+                 'long_name': 'latitude of each measurement and GPS location',
                  'observation_type': 'measured',
                  'platform': 'platform',
                  'reference': 'WGS84',
@@ -223,7 +239,7 @@ attrs_dict = {
                  },
     "LONGITUDE":
         {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-         'long_name': 'longitude',
+         'long_name': 'longitude of each measurement and GPS location',
          'observation_type': 'measured',
          'platform': 'platform',
          'reference': 'WGS84',
@@ -235,7 +251,7 @@ attrs_dict = {
          },
     "TIME":
         {
-            'long_name': 'Time',
+            'long_name': 'time of measurement',
             'observation_type': 'measured',
             'standard_name': 'time',
             'units': 'seconds since 1970-01-01 00:00:00 UTC',

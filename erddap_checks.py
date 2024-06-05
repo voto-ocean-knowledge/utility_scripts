@@ -63,14 +63,14 @@ def nrt_vs_complete(df_datasets):
 
     for this_dataset in df_delayed.index:
         if this_dataset not in df_nrt.index:
-            mailer("cherdap",f"{this_dataset} not found in nrt. Last update:", df_delayed.loc[this_dataset]["maxTime (UTC)"])
+            mailer("cherdap",f"{this_dataset} not found in nrt. Last update:{df_delayed.loc[this_dataset]['maxTime (UTC)']}")
     return df_datasets
 
 
 def bad_depths(df_datasets):
     _log.info("Check bad depths")
     if len(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)']) > 0:
-        mailer("cherddap", "bad altitude")
+        mailer("cherddap", f"bad altitude (glider depth): {list(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)'].index)}")
 
 
 def bad_dataset_id(df_datasets):
