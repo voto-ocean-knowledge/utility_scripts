@@ -217,7 +217,7 @@ def datasets_to_emodnet(df_datasets):
         lost_datasets = list(set(check_names).difference(set(emodent_datasets)))
         if len(lost_datasets) > 0:
             names_text = '\n'.join(lost_datasets)
-            msg = f"failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP \n: {names_text}"
+            msg = f"failed to find {len(lost_datasets)} datasets on  emodnet ERDDAP: \n {names_text}"
             mailer("cherddap", msg)
 
 
@@ -245,10 +245,7 @@ def main():
     df_datasets = df_datasets[df_datasets.index.str.contains("SEA")]
     enough_datasets(df_datasets)
     df_datasets = nrt_vs_complete(df_datasets)
-    try:
-        datasets_to_emodnet(df_datasets)
-    except:
-        mailer("cherddap", "emodnet check failed")
+    datasets_to_emodnet(df_datasets)
     bad_depths(df_datasets)
     bad_dataset_id(df_datasets)
     delayed = df_datasets.index[df_datasets.index.str[:3] == "del"]
