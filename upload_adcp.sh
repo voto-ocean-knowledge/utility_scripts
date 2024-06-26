@@ -9,5 +9,5 @@ echo make directory on target if it does not already exist
 ssh pipeline@16.170.107.21 mkdir -p $tgtdir
 echo ""
 echo rsync data
-rsync $adcpfile "pipeline@16.170.107.21:$tgtdir"
+rsync $adcpfile "pipeline@88.99.244.110:$tgtdir"
 echo Finished
