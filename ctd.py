@@ -7,6 +7,7 @@ import logging
 import gsw
 from utilities import encode_times
 from seabird.cnv import fCNV
+from utilities import mailer
 import pathlib
 import sys
 script_dir = pathlib.Path(__file__).parent.absolute()
@@ -270,7 +271,8 @@ def filenames_match(locfile):
     csv_dir = locfile.parent / "CSV"
     for fn in locations.File.values:
         filename = fn + ".csv"
-        assert (Path(csv_dir) / filename).exists()
+        if not (Path(csv_dir) / filename).exists():
+            mailer("missing-ctd", f"missing ctd file {csv_dir}/{filename}. present in location file")
 
 
 def ds_from_df(df):
@@ -348,7 +350,7 @@ def main():
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
         ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
-         "usrerddap@13.51.101.57:/media/data/ctd/ctd_deployment.nc"])
+         "usrerddap@136.243.54.252:/media/data/ctd/ctd_deployment.nc"])
 
 
 if __name__ == '__main__':
