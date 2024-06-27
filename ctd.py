@@ -7,6 +7,7 @@ import logging
 import gsw
 from utilities import encode_times
 from seabird.cnv import fCNV
+from utilities import mailer
 import pathlib
 import sys
 script_dir = pathlib.Path(__file__).parent.absolute()
@@ -265,12 +266,14 @@ def load_cnv_file(ctd_csv, df_base):
     return df_base
 
 
-def filenames_match(locfile):
+def filenames_match(locfile, missing_files=[]):
     locations = pd.read_csv(locfile, sep=";")
     csv_dir = locfile.parent / "CSV"
     for fn in locations.File.values:
         filename = fn + ".csv"
-        assert (Path(csv_dir) / filename).exists()
+        if not (Path(csv_dir) / filename).exists():
+            missing_files.append(str(csv_dir/filename))
+    return missing_files
 
 
 def ds_from_df(df):
@@ -297,6 +300,7 @@ def flag_ctd(ds):
 
 def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
+    missing_ctd_files = []
     df = pd.DataFrame()
     fn = 0
     cnv_files = list(Path("/mnt/samba/").glob("*/5_Calibration/*/*SBE09*.cnv*")) + list(
@@ -317,7 +321,7 @@ def main():
         _log.info(f"processing location file {locfile}")
         csv_dir = locfile.parent / "CSV"
         csv_files = list(csv_dir.glob("*.*sv"))
-        filenames_match(locfile)
+        missing_ctd_files = filenames_match(locfile, missing_files=missing_ctd_files)
         for ctd_csv in csv_files:
             _log.info(f"Start add {ctd_csv}")
             try:
@@ -348,7 +352,8 @@ def main():
     _log.info(f"Send ctds to ERDDAP")
     subprocess.check_call(
         ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
-         "usrerddap@136.243.54.252/data/ctd/ctd_deployment.nc"])
+         "usrerddap@136.243.54.252:/data/ctd/ctd_deployment.nc"])
+    mailer("missing-ctd", f"missing ctd file {', '.join(missing_ctd_files)}. present in location file")
 
 
 if __name__ == '__main__':
