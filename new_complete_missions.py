@@ -3,7 +3,6 @@ import pathlib
 import pandas as pd
 import numpy as np
 import logging
-import types
 from pathlib import Path
 from pyglider_single_mission import process
 _log = logging.getLogger(__name__)
@@ -31,8 +30,12 @@ def main():
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     _log.info("Check for new missions")
-    df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
-    df_reprocess.sort_values("proc_time", inplace=True)
+    if Path('/home/pipeline/reprocess.csv').exists():
+        df_reprocess = pd.read_csv('/home/pipeline/reprocess.csv', parse_dates=["proc_time"])
+        df_reprocess.sort_values("proc_time", inplace=True)
+    else:
+        df_reprocess = pd.DataFrame({'glider': [55], 'mission': [16], 'proc_time': [datetime.datetime(1970, 1, 1)],
+                                     'duration': [datetime.timedelta(minutes=10)]})
     _log.info(f"start length {len(df_reprocess)}")
     glider_paths = list(pathlib.Path("/data/data_raw/complete_mission").glob("SEA*"))
     glider_paths_good = []
@@ -54,11 +57,7 @@ def main():
             _log.warning(f"new mission {mission_path}")
             if not adcp_status(glider, mission):
                 continue
-            args = types.SimpleNamespace()
-            args.glider = glider
-            args.mission = mission
-            args.kind = "raw"
-            process(args)
+            process(glider, mission)
             nc_file = list((pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/timeseries")).glob('*.nc'))[0]
             nc_time = nc_file.lstat().st_mtime
             nc_time = datetime.datetime.fromtimestamp(nc_time)

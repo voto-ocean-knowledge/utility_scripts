@@ -3,6 +3,7 @@ This script checks that the other steps of the pipeline are running as expected.
 To monitor a file, add the path to it and part of its expected last line to the files_dict
 """
 import datetime
+
 import re
 import pandas as pd
 from utilities import mailer

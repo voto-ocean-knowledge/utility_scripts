@@ -3,71 +3,74 @@ import numpy as np
 import xarray as xr
 from utilities import encode_times_og1, set_best_dtype
 
-instrument_vocabs = {
+sensor_vocabs = {
     "RBR legato CTD": {
-        'type': 'CTD',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
-        'maker': 'RBR',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
-        'model': 'RBR Legato3 CTD',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
+        'sensor_type': 'CTD',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
+        'sensor_maker': 'RBR',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
+        'sensor_model': 'RBR Legato3 CTD',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
         'long_name': 'RBR Legato3 CTD',
     },
     "Wetlabs FLBBCD": {
-        'type': 'fluorometers',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
-        'maker': 'WET Labs',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
-        'model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} ECO FLBBCD scattering fluorescence sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
         'long_name': 'WET Labs ECO-FLBBCD',
     },
     "Nortek AD2CP": {
-        'type': 'ADVs and turbulence probes',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
-        'maker': 'Nortek',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/',
-        'model': 'Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/',
+        'sensor_type': 'ADVs and turbulence probes',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
+        'sensor_maker': 'Nortek',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0068/',
+        'sensor_model': 'Nortek Glider1000 AD2CP Acoustic Doppler Current Profiler',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1774/',
         'long_name': 'Nortek AD2CP',
     },
     "JFE Advantech AROD_FT": {
-        'type': 'dissolved gas sensors',
-        'type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
-        'maker': 'JFE Advantech',
-        'maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/',
-        'model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
-        'model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
+        'sensor_type': 'dissolved gas sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'sensor_maker': 'JFE Advantech',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0053/',
+        'sensor_model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
         'long_name': 'JFE Rinko ARO-FT',
     },
 }
 
-variables_instruments = {'CNDC': 'CTD',
-                         'DOXY': 'dissolved gas sensors',
-                         'PRES': 'CTD',
-                         'PSAL': 'CTD',
-                         'TEMP': 'CTD',
-                         }
+variables_sensors = {'CNDC': 'CTD',
+                     'DOXY': 'dissolved gas sensors',
+                     'PRES': 'CTD',
+                     'PSAL': 'CTD',
+                     'TEMP': 'CTD',
+                     'BBP700': 'fluorometers',
+                     'CHLA': 'fluorometers',
+                     'PRES_ADCP': 'ADVs and turbulence probes',
+                     }
 
 
-def add_instruments(ds, dsa):
+def add_sensors(ds, dsa):
     attrs = ds.attrs
-    instruments = []
+    sensors = []
     for key, var in attrs.items():
         if type(var) != str:
             continue
         if '{' not in var:
             continue
         if type(eval(var)) == dict:
-            instruments.append(key)
+            sensors.append(key)
 
-    instrument_name_type = {}
-    for instr in instruments:
+    sensor_name_type = {}
+    for instr in sensors:
         attr_dict = eval(attrs[instr])
-        if attr_dict['make_model'] not in instrument_vocabs.keys():
+        if attr_dict['make_model'] not in sensor_vocabs.keys():
             print(attr_dict['make_model'], "not found")
             continue
-        var_dict = instrument_vocabs[attr_dict['make_model']]
+        var_dict = sensor_vocabs[attr_dict['make_model']]
         if 'serial' in attr_dict.keys():
             var_dict['serial_number'] = str(attr_dict['serial'])
             var_dict['long_name'] += f":{str(attr_dict['serial'])}"
@@ -75,9 +78,9 @@ def add_instruments(ds, dsa):
             if var_name in attr_dict.keys():
                 var_dict[var_name] = str(attr_dict[var_name])
         da = xr.DataArray(attrs=var_dict)
-        instrument_var_name = f"instrument_{var_dict['type']}_{var_dict['serial_number']}".upper().replace(' ', '_')
-        dsa[instrument_var_name] = da
-        instrument_name_type[var_dict['type']] = instrument_var_name
+        sensor_var_name = f"sensor_{var_dict['sensor_type']}_{var_dict['serial_number']}".upper().replace(' ', '_')
+        dsa[sensor_var_name] = da
+        sensor_name_type[var_dict['sensor_type']] = sensor_var_name
 
     for key, var in attrs.copy().items():
         if type(var) != str:
@@ -88,15 +91,15 @@ def add_instruments(ds, dsa):
             attrs.pop(key)
     ds.attrs = attrs
 
-    for key, instrument_type in variables_instruments.items():
+    for key, sensor_type in variables_sensors.items():
         if key in dsa.variables:
-            instr_key = instrument_name_type[instrument_type]
+            instr_key = sensor_name_type[sensor_type]
             dsa[key].attrs['sensor'] = instr_key
 
     return ds, dsa
 
 
-def convert_to_og1(ds, parameters=False):
+def convert_to_og1(ds, parameters=False, num_vals=10, postscript='R'):
     """
     Based on example by Jen Seva https://github.com/OceanGlidersCommunity/OG-format-user-manual/pull/136/files
     Using variable names from OG1 vocab https://vocab.nerc.ac.uk/collection/OG1/current/
@@ -118,22 +121,21 @@ def convert_to_og1(ds, parameters=False):
         PARAMETER.append(var_name)
         if "units" not in att.keys():
             att["units"] = "None"
-
-        if "instruments" in att.keys():
-            PARAMETER_SENSOR.append(att["instruments"])
-        elif "instrument" not in att.keys():
+        if "sensors" in att.keys():
+            PARAMETER_SENSOR.append(att["sensors"])
+        elif "sensor" not in att.keys():
             PARAMETER_SENSOR.append("glider")
         else:
-            PARAMETER_SENSOR.append(att["instrument"].split("_")[-1])
+            PARAMETER_SENSOR.append(att["sensor"].split("_")[-1])
         PARAMETER_UNITS.append(att["units"])
     dsa = xr.Dataset()
     for var_name in list(ds) + list(ds.coords):
         if "_QC" in var_name:
             continue
-        dsa[var_name] = ('N_MEASUREMENTS', ds[var_name].values[:10], ds[var_name].attrs)
+        dsa[var_name] = ('N_MEASUREMENTS', ds[var_name].values[:num_vals], ds[var_name].attrs)
         qc_name = f'{var_name}_QC'
         if qc_name in list(ds):
-            dsa[qc_name] = ('N_MEASUREMENTS', ds[qc_name].values[:10].astype("int8"), ds[qc_name].attrs)
+            dsa[qc_name] = ('N_MEASUREMENTS', ds[qc_name].values[:num_vals].astype("int8"), ds[qc_name].attrs)
             dsa[qc_name].attrs['long_name'] = f'{dsa[var_name].attrs["long_name"]} Quality Flag'
             dsa[qc_name].attrs['standard_name'] = 'status_flag'
             dsa[qc_name].attrs['flag_values'] = np.array((1, 2, 3, 4, 9)).astype("int8")
@@ -148,23 +150,36 @@ def convert_to_og1(ds, parameters=False):
     for vname in ['LATITUDE', 'LONGITUDE', 'TIME']:
         dsa[f'{vname}_GPS'] = dsa[vname].copy()
         dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.nan
-        dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname} of each GPS location'
-    if 'PHASE' in dsa.variables:
-        dsa = dsa.drop_vars(["PHASE"])
-    ds, dsa = add_instruments(ds, dsa)
+        dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname.lower()} of each GPS location'
+    seaex_phase = dsa['PHASE'].values
+    standard_phase = np.zeros(len(seaex_phase))
+    standard_phase[seaex_phase == 115] = 3
+    standard_phase[seaex_phase == 116] = 3
+    standard_phase[seaex_phase == 119] = 3
+    standard_phase[seaex_phase == 110] = 5
+    standard_phase[seaex_phase == 118] = 5
+    standard_phase[seaex_phase == 100] = 2
+    standard_phase[seaex_phase == 117] = 1
+    dsa['PHASE'].values = standard_phase
+    dsa['PHASE'].attrs = {'long_name': "behavior of the glider at sea",
+                          'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'}
+    ds, dsa = add_sensors(ds, dsa)
     attrs = ds.attrs
     if parameters:
         dsa["PARAMETER"] = ("N_PARAMETERS", PARAMETER, {})
         dsa["PARAMETER_SENSOR"] = ("N_PARAMETERS", PARAMETER_SENSOR, {})
         dsa["PARAMETER_UNITS"] = ("N_PARAMETERS", PARAMETER_UNITS, {})
     ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
-    attrs['id'] = f"SEA{str(attrs['glider_serial']).zfill(3)}_{ts}_R"
+    attrs['id'] = f"sea{str(attrs['glider_serial']).zfill(3)}_{ts}_{postscript}"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
     attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/27/'
     attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , '
     attrs['contributor_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/'
     attrs['contributor_role'] = 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,'
+    attrs['contributing_institutions'] = 'Voice of the Ocean Foundation'
+    attrs['contributing_institutions_role'] = 'Operator'
+    attrs['contributing_institutions_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/current/'
     attrs['date_modified'] = attrs['date_created']
     attrs['agency'] = 'Voice of the Ocean'
     attrs['agency_role'] = 'contact point'
@@ -173,11 +188,16 @@ def convert_to_og1(ds, parameters=False):
     attrs['rtqc_method'] = "IOOS QC QARTOD https://github.com/ioos/ioos_qc"
     attrs['rtqc_method_doi'] = "None"
     attrs['featureType'] = 'trajectory'
-    attrs['Conventions'] = 'CF-1.8, OG-1.0'
+    attrs['Conventions'] = 'CF-1.10, OG-1.0'
+    attrs['comment'] = 'Dataset for demonstration purposes only. Original dataset truncated for the sake of simplicity'
+    attrs['start_date'] = attrs['time_coverage_start']
     dsa.attrs = attrs
     dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'})
     dsa['WMO_IDENTIFIER'] = xr.DataArray(ds.attrs['wmo_id'], attrs={'long_name': 'wmo id'})
-    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider'})
+    dsa['PLATFORM_MODEL'] = xr.DataArray(ds.attrs['glider_model'], attrs={'long_name': 'model of the glider',
+                                                                          'platform_model_vocabulary': "None"})
+    dsa['PLATFORM_SERIAL_NUMBER'] = xr.DataArray(f"sea{ds.attrs['glider_serial'].zfill(3)}",
+                                                 attrs={'long_name': 'glider serial number'})
     dsa['DEPLOYMENT_TIME'] = np.nanmin(dsa.TIME.values)
     dsa['DEPLOYMENT_TIME'].attrs = {'long_name': 'date of deployment',
                                     'standard_name': 'time',
@@ -200,17 +220,19 @@ new_names = {
     'pressure': 'PRES',
     'conductivity': 'CNDC',
     'oxygen_concentration': 'DOXY',
-    'chlorophyll_concentration': 'CHLA',
+    'chlorophyll': 'CHLA',
     'temperature': 'TEMP',
     'salinity': 'PSAL',
     'density': 'DENSITY',
     'profile_index': 'PROFILE_NUMBER',
     'nav_state': 'PHASE',
+    'adcp_Pressure': 'PRES_ADCP',
+    'particulate_backscatter': 'BBP700',
 }
 
 attrs_dict = {
     "LATITUDE": {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-                 'long_name': 'latitude',
+                 'long_name': 'latitude of each measurement and GPS location',
                  'observation_type': 'measured',
                  'platform': 'platform',
                  'reference': 'WGS84',
@@ -222,7 +244,7 @@ attrs_dict = {
                  },
     "LONGITUDE":
         {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-         'long_name': 'longitude',
+         'long_name': 'longitude of each measurement and GPS location',
          'observation_type': 'measured',
          'platform': 'platform',
          'reference': 'WGS84',
@@ -234,7 +256,7 @@ attrs_dict = {
          },
     "TIME":
         {
-            'long_name': 'Time',
+            'long_name': 'time of measurement',
             'observation_type': 'measured',
             'standard_name': 'time',
             'units': 'seconds since 1970-01-01 00:00:00 UTC',
@@ -249,7 +271,7 @@ attrs_dict = {
             'standard_name': 'depth',
             'units': 'm',
             'comment': 'from science pressure and interpolated',
-            'instrument': 'instrument_ctd',
+            'sensor': 'sensor_ctd',
             'observation_type': 'calculated',
             'accuracy': 1,
             'precision': 2,
@@ -281,7 +303,7 @@ attrs_dict = {
             'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/CPWC/',
         },
     "CNDC": {
-        'instrument': 'instrument_ctd',
+        'sensor': 'sensor_ctd',
         'long_name': 'Electrical conductivity of the water body by CTD',
         'observation_type': 'measured',
         'standard_name': 'sea_water_electrical_conductivity',
@@ -292,7 +314,7 @@ attrs_dict = {
     },
     "PRES": {
         'comment': 'ctd pressure sensor',
-        'instrument': 'instrument_ctd',
+        'sensor': 'sensor_ctd',
         'long_name': 'Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level',
         'observation_type': 'measured',
         'positive': 'down',
@@ -309,7 +331,7 @@ attrs_dict = {
              'comment': 'Practical salinity of the water body by CTD and computation using UNESCO 1983 algorithm',
              'sources': 'CNDC, TEMP, PRES',
              'observation_type': 'calculated',
-             'instrument': 'instrument_ctd',
+             'sensor': 'sensor_ctd',
              'valid_max': 40,
              'valid_min': 0,
              'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/'
@@ -341,6 +363,27 @@ attrs_dict = {
     'PHASE': {'long_name': 'behavior of the glider at sea',
               'comment': 'This is the variable NAV_STATE from the SeaExplorer nav file',
               'units': '1'},
+    "PRES_ADCP": {
+        'comment': 'adcp pressure sensor',
+        'sensor': 'sensor_adcp',
+        'long_name': 'Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level',
+        'observation_type': 'measured',
+        'positive': 'down',
+        'reference_datum': 'sea-surface',
+        'standard_name': 'sea_water_pressure',
+        'units': 'dbar',
+        'valid_max': 2000,
+        'valid_min': 0,
+        'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/PRES'
+    },
+    "BBP700":
+        {
+            'long_name': 'Particle backscattering at 700 nanometers.',
+            'observation_type': 'calculated',
+            'units': 'm-1',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/BBP700/',
+            'processing': 'Particulate backscatter b_bp calculated following methods in the Ocean Observatories Initiative document DATA PRODUCT SPECIFICATION FOR OPTICAL BACKSCATTER (RED WAVELENGTHS) Version 1-05 Document Control Number 1341-00540 2014-05-28. Downloaded from https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf',
+        },
 
 }
 

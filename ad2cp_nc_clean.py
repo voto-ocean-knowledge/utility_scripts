@@ -3,12 +3,14 @@ from pathlib import Path
 import subprocess
 from office_check_glider_files import list_missions, skip_projects, secrets
 from utilities import mailer
-
+import logging
+_log = logging.getLogger(__name__)
 base = Path(secrets["data_path"])
 explained_issues = [(66, 45)]
 
 
 def proc(mission_dir, reprocess=False):
+    _log.info(f"clean ad2cp data for {mission_dir}")
     if "XXX" in str(mission_dir):
         return
     sub_directories = list(mission_dir.glob("*/")) + list(mission_dir.glob("*/*"))

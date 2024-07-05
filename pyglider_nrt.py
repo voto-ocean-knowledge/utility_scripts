@@ -42,7 +42,6 @@ def proc_nrt():
         output_dir = f"/data/data_l0_pyglider/nrt/SEA{glider}/M{mission}/"
         gridfiles_dir = f"{output_dir}gridfiles/"
         ts_dir = f"{output_dir}/timeseries/"
-        proc_steps = (0, 1, 1, 1)
         try:
             nc_file = list(pathlib.Path(ts_dir).glob('*.nc'))[0]
             ds = xr.open_dataset(nc_file)
@@ -51,7 +50,6 @@ def proc_nrt():
         except IndexError:
             _log.info(f"no nc file found int {gridfiles_dir}. Reprocessing all data")
             max_time = np.datetime64('1970-01-01')
-            proc_steps = (1, 1, 1, 1)
         in_files = natural_sort(glob.glob(f'{input_dir}*pld1*'))
         max_dive_file = in_files[-1]
         df = pd.read_csv(max_dive_file, sep=';', parse_dates=True, index_col=0, dayfirst=True, nrows=10)
@@ -63,7 +61,7 @@ def proc_nrt():
             _log.warning(f"yml file for SEA{glider} M{mission} not found.")
             continue
         _log.info(f"Processing SEA{glider} M{mission}")
-        proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir, steps=proc_steps)
+        proc_pyglider_l0(glider, mission, 'sub', input_dir, output_dir)
         _log.info("creating metocc csv")
         timeseries_dir = pathlib.Path(output_dir) / "timeseries"
         timeseries_nc = list(timeseries_dir.glob("*.nc"))[0]
