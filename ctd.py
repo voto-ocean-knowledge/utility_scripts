@@ -17,9 +17,6 @@ sys.path.append(str(qc_dir))
 # noinspection PyUnresolvedReferences
 from flag_qartod import flag_ioos, ioos_qc
 _log = logging.getLogger(__name__)
-sender = "/home/pipeline/utility_scripts/send.sh"
-if not Path(sender).exists():
-    sender = "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh"
 
 clean_names = {
     "latitude": "LATITUDE",
@@ -188,7 +185,11 @@ def read_ctd(ctd_csv, locfile, df_base):
         cast_number = df_base.cast_number.max() + 1
     locations = pd.read_csv(locfile, sep=";")
     fn = ctd_csv.name.split(".")[0]
-    row = locations[locations.File == fn].iloc[0]
+    rows = locations[locations.File == fn]
+    if rows.empty:
+        mailer("ctd-process", f"no location for ctd {ctd_csv} in file {locfile}")
+        return df_base
+    row = rows.iloc[0]
     sep = "/"
     with open(ctd_csv) as file:
         for i, line in enumerate(file):
@@ -197,14 +198,15 @@ def read_ctd(ctd_csv, locfile, df_base):
                     sep = "-"
             if "Measurement" in line:
                 skips = i
-                df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False,
-                                 parse_dates={'datetime': ["Measurement Date/Time"]},
-                                 date_format=f"%Y{sep}%m{sep}%d %H:%M:%S")
+                df = pd.read_csv(ctd_csv, skiprows=skips, index_col=False)
+                df['datetime'] = pd.to_datetime(df['Measurement Date/Time'], format=f"%Y{sep}%m{sep}%d %H:%M:%S")
+                df = df.drop(['Measurement Date/Time'], axis=1)
                 break
             if line[:4] == "Date":
                 skips = i
-                df = pd.read_csv(ctd_csv, skiprows=skips, parse_dates={'datetime': ["Date", "Time"]},
-                                 date_format="%Y/%m/%d %H:%M:%S")
+                df = pd.read_csv(ctd_csv, skiprows=skips)
+                df['datetime'] = pd.to_datetime(df['Date'] + 'T' + df['Time'])
+                df = df.drop(['Date', 'Time'], axis=1)
                 break
     with open(ctd_csv) as file:
         for i, line in enumerate(file):
@@ -311,9 +313,7 @@ def main():
             df = load_cnv_file(filename, df)
         except:
             _log.error(f"failed with {filename}")
-            subprocess.check_call(
-                ['/usr/bin/bash', sender, f"failed to process ctd {filename}", "ctd-process",
-                 "callum.rollo@voiceoftheocean.org"])
+            mailer("ctd-process", f"failed to process ctd {filename}")
             continue
         _log.info(f"Added {filename}")
         fn += 1
@@ -328,9 +328,7 @@ def main():
                 df = read_ctd(ctd_csv, locfile, df)
             except:
                 _log.error(f"failed with {ctd_csv}")
-                subprocess.check_call(
-                    ['/usr/bin/bash', sender, f"failed to process ctd {ctd_csv}", "ctd-process",
-                     "callum.rollo@voiceoftheocean.org"])
+                mailer("ctd-process", f"failed to process ctd {csv_files}")
                 continue
             _log.info(f"Added {ctd_csv}")
             fn += 1

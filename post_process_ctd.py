@@ -9,7 +9,7 @@ _log = logging.getLogger(__name__)
 
 def interp(x, y, xi):
     _gg = np.isfinite(x + y)
-    return interp1d(x[_gg], y[_gg], bounds_error=False, fill_value=np.NaN)(xi)
+    return interp1d(x[_gg], y[_gg], bounds_error=False, fill_value=np.nan)(xi)
 
 
 def salinity_pressure_correction(ds):
@@ -35,8 +35,7 @@ def correct_rbr_lag(ds):
     """
     Thermal lag from Thermal Inertia of Conductivity Cells: Observations with a Sea-Bird Cell
     Rolf G. Lueck and James J. Picklo https://doi.org/10.1175/1520-0426(1990)007<0756:TIOCCO>2.0.CO;2
-    :param data: 
-    :return: 
+    :return:
     """
     raw_seconds = (ds['time'].values - np.nanmin(ds['time'].values))
     if "float" not in str(ds.time.dtype):
