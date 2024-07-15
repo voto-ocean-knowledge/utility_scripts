@@ -320,7 +320,11 @@ def main():
             continue
         _log.info(f"Added {filename}")
         fn += 1
+    df_all_locs = pd.DataFrame()
     for locfile in location_files:
+        df_loc = pd.read_csv(locfile, sep=';')
+        df_loc['fn'] = locfile
+        df_all_locs = pd.concat((df_all_locs, df_loc))
         _log.info(f"processing location file {locfile}")
         csv_dir = locfile.parent / "CSV"
         csv_files = list(csv_dir.glob("*.*sv"))
@@ -354,6 +358,9 @@ def main():
     subprocess.check_call(
         ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
          "usrerddap@136.243.54.252:/data/ctd/ctd_deployment.nc"])
+    if not len(df_all_locs) != len(df_all_locs['File'].unique()):
+        mailer("bad-ctd-locfiles", f"duplicate entries accross ctd location files")
+
     if len(missing_ctd_files) > 0:
         mailer("missing-ctd", f"missing ctd file {', '.join(missing_ctd_files)}. present in location file")
 
