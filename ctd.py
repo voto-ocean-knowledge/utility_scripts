@@ -270,6 +270,9 @@ def load_cnv_file(ctd_csv, df_base):
 
 def filenames_match(locfile, missing_files=[]):
     locations = pd.read_csv(locfile, sep=";")
+    locations_unique = locations['File'].unique()
+    if len(locations) != len(locations_unique):
+        mailer("duplicate-locations", f"file {locfile} contains duplicate locations")
     csv_dir = locfile.parent / "CSV"
     for fn in locations.File.values:
         filename = fn + ".csv"
@@ -351,7 +354,8 @@ def main():
     subprocess.check_call(
         ['/usr/bin/rsync', "/data/ctd/ctd_deployment.nc",
          "usrerddap@136.243.54.252:/data/ctd/ctd_deployment.nc"])
-    mailer("missing-ctd", f"missing ctd file {', '.join(missing_ctd_files)}. present in location file")
+    if len(missing_ctd_files) > 0:
+        mailer("missing-ctd", f"missing ctd file {', '.join(missing_ctd_files)}. present in location file")
 
 
 if __name__ == '__main__':
