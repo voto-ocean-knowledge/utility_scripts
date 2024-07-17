@@ -5,12 +5,19 @@ import numpy as np
 import logging
 from pathlib import Path
 from pyglider_single_mission import process
+from utilities import mailer
 _log = logging.getLogger(__name__)
+
+expected_adcp_fails = [(66, 16)]
 
 
 def adcp_status(glider, mission):
     pld_file = list(Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/").glob("*pld1.raw.*gz"))[0]
     df = pd.read_csv(pld_file, sep=";")
+    if (glider, mission) in expected_adcp_fails:
+        _log.info("no adcp data expected, none recovered during mission")
+        return True
+
     if "AD2CP_PRESSURE" not in list(df):
         _log.info("no adcp data expected")
         return True
@@ -18,7 +25,7 @@ def adcp_status(glider, mission):
         _log.info("adcp data file found")
         return True
     else:
-        _log.warning("did not find expected ADCP file")
+        mailer("no-adcp", f"did not find expected ADCP file for SEA{glider} M{mission}")
         return False
 
 
@@ -36,6 +43,7 @@ def main():
     else:
         df_reprocess = pd.DataFrame({'glider': [55], 'mission': [16], 'proc_time': [datetime.datetime(1970, 1, 1)],
                                      'duration': [datetime.timedelta(minutes=10)]})
+        df_reprocess.to_csv('/home/pipeline/reprocess.csv', index=False)
     _log.info(f"start length {len(df_reprocess)}")
     glider_paths = list(pathlib.Path("/data/data_raw/complete_mission").glob("SEA*"))
     glider_paths_good = []
