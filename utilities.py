@@ -57,7 +57,7 @@ def encode_times(ds):
             for drop_attr in ['units', 'calendar', 'dtype']:
                 if drop_attr in ds[var_name].attrs.keys():
                     ds[var_name].attrs.pop(drop_attr)
-            ds[var_name].encoding = ds["time"].encoding
+            ds[var_name].encoding["units"] = 'seconds since 1970-01-01T00:00:00Z'
     return ds
 
 

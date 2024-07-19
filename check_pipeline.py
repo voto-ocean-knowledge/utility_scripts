@@ -25,7 +25,7 @@ files_collection = (
     ("new_complete_mission.log", "Complete", 25),
     ("ctd_plots.log", "completed process all CTDs", 25),
     ("glider_transect.log", "End analysis", 2),
-    ("metadata_tables.log", "Tables successfully uploaded to ERDDAP", 25),
+    ("metadata_tables.log", "End processing", 25),
     ("cherrdap.log", "ERDDAP checks complete", 25),
 )
 def check_log_file(file, expected_last_line, hours):
