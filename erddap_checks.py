@@ -270,7 +270,7 @@ def main():
     sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
     international_waters_check(e, "nrt_SEA067_M27")
     international_waters_check(e, nrt[np.random.randint(0, num_nrt-1)])
-    adcp_proc_check(df_datasets)
+    adcp_proc_check(e)
     good_times()
     manual_qc()
 
