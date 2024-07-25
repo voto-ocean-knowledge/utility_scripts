@@ -103,7 +103,7 @@ def profile_num_vs_dive_num(e, dataset_id):
         "profile_num",
     ]
     e.dataset_id = dataset_id
-    ds = e.to_xarray()
+    ds = e.to_xarray(requests_kwargs={"timeout": 300})
     ds = ds.drop_dims("timeseries")
     ds_sort = ds.sortby('time')
     if not ds.time.equals(ds_sort.time):
@@ -118,7 +118,7 @@ def sensible_values(e, dataset_id):
     _log.info(f"Check sensible values {dataset_id}")
     e.dataset_id = dataset_id
 
-    ds = e.to_xarray()
+    ds = e.to_xarray(requests_kwargs={"timeout": 300})
     ds = ds.drop_dims("timeseries")
     for var in list(ds.variables):
         mini, maxi = np.nanmin(ds[var].values), np.nanmax(ds[var].values)
@@ -141,7 +141,7 @@ def unit_check(e, dataset_id):
     _log.info(f"Check units {dataset_id}")
     e.dataset_id = dataset_id
 
-    ds = e.to_xarray()
+    ds = e.to_xarray(requests_kwargs={"timeout": 300})
     ds = ds.drop_dims("timeseries")
     for var in list(ds.variables):
         attrs = ds[var].attrs
@@ -226,7 +226,7 @@ def adcp_proc_check(e):
     dataset_id = adcp_datasets[np.random.randint(0, len(adcp_datasets) - 1)]
     e.dataset_id = dataset_id
     e.variables = ['time', 'adcp_time']
-    ds = e.to_xarray()
+    ds = e.to_xarray(requests_kwargs={"timeout": 300})
     ds = ds.drop_dims("timeseries")
     if len(np.unique(ds.adcp_time.values)) < 10000:
         msg = f"bad adcp times for {dataset_id}"
