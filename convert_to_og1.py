@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 from utilities import encode_times_og1, set_best_dtype
+import logging
+
+_log = logging.getLogger(__name__)
 
 sensor_vocabs = {
     "RBR legato CTD": {
@@ -22,6 +25,33 @@ sensor_vocabs = {
         'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1141/',
         'long_name': 'WET Labs ECO-FLBBCD',
     },
+    "Wetlabs FLBBPC": {
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} ECO Puck Triplet FLBBPC scattering fluorescence sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1904/',
+        'long_name': ' WET Labs ECO FLBBPC',
+    },
+    "Wetlabs FLBBPE": {
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} ECO Triplet sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL0674/',
+        'long_name': 'WET Labs ECO-FLBBCE',
+    },
+    "Wetlabs FLNTU": {
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} ECO FLNTU combined fluorometer and turbidity sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL0215/',
+        'long_name': ' WET Labs ECO FLNTU',
+    },
     "Nortek AD2CP": {
         'sensor_type': 'ADVs and turbulence probes',
         'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/384/',
@@ -39,6 +69,87 @@ sensor_vocabs = {
         'sensor_model': 'JFE Advantech Rinko FT ARO-FT oxygen sensor',
         'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
         'long_name': 'JFE Rinko ARO-FT',
+    },
+    "RBR coda TODO": {
+        'sensor_type': 'dissolved gas sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'sensor_maker': 'RBR',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
+        'sensor_model': 'RBR Coda T.ODO Temperature and Dissolved Oxygen Sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1783/',
+        'long_name': 'RBR Coda T.ODO',
+    },
+    "SeaBird OCR504": {
+        'sensor_type': 'radiometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/122/',
+        'sensor_maker': 'Sea-Bird Scientific',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0013/',
+        'sensor_model': 'Satlantic {Sea-Bird} OCR-504 multispectral radiometer',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL0625/',
+        'long_name': 'Sea-Bird OCR-504 ',
+    },
+    "Seabird Deep SUNA": {
+        'sensor_type': 'nutrient analysers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/181/',
+        'sensor_maker': 'Sea-Bird Scientific',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0013/',
+        'sensor_model': 'Satlantic {Sea-Bird} Submersible Ultraviolet Nitrate Analyser V2 (SUNA V2) nutrient analyser series',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1562/',
+        'long_name': 'Sea-Bird SUNA ',
+    },
+    "Franatech METS": {
+        'sensor_type': 'dissolved gas sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'sensor_maker': 'Franatech',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0303/',
+        'sensor_model': 'Franatech METS Methane Sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1244/',
+        'long_name': 'Franatech METS Methane Sensor ',
+    },
+    "Biospherical MPE-PAR": {
+        'sensor_type': 'radiometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/122/',
+        'sensor_maker': 'Biospherical Instruments',
+        'sensor_maker_vocabulary': 'http://vocab.nerc.ac.uk/collection/L35/current/MAN0028/',
+        'sensor_model': 'Biospherical PAR sensor (UnSpec model)',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1254/',
+        'long_name': 'Biospherical PAR sensor',
+    },
+    "Rockland Scientific MR1000G-RDL": {
+        'sensor_type': 'microstructure sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/184/',
+        'sensor_maker': 'Rockland Scientific',
+        'sensor_maker_vocabulary': 'http://vocab.nerc.ac.uk/collection/L35/current/MAN0022/',
+        'sensor_model': 'Rockland MicroRider-1000',
+        'sensor_model_vocabulary': 'http://vocab.nerc.ac.uk/collection/L22/current/TOOL1232/',
+        'long_name': 'Rockland MicroRider-1000',
+    },
+    "Seabird SlocumCTD": {
+        'sensor_type': 'CTD',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
+        'sensor_maker': 'Sea-Bird Scientific',
+        'sensor_maker_vocabulary': 'http://vocab.nerc.ac.uk/collection/L35/current/MAN0013/',
+        'sensor_model': 'Sea-Bird Slocum Glider Payload {GPCTD} CTD',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1492/',
+        'long_name': 'Sea-Bird Slocum CTD',
+    },
+    "SeaOWL UV-A": {
+        'sensor_type': 'fluorometers',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/113/',
+        'sensor_maker': 'WET Labs',
+        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0026/',
+        'sensor_model': 'WET Labs {Sea-Bird WETLabs} SeaOWL UV-A Sea Oil-in-Water Locator',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1766/',
+        'long_name': 'WET Labs SeaOWL',
+    },
+    "Seabird SBE43F": {
+        'sensor_type': 'dissolved gas sensors',
+        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/351/',
+        'sensor_maker': 'Sea-Bird Scientific',
+        'sensor_maker_vocabulary': 'http://vocab.nerc.ac.uk/collection/L35/current/MAN0013/',
+        'sensor_model': 'Sea-Bird SBE 43F Dissolved Oxygen Sensor',
+        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL0037/',
+        'long_name': 'Sea-Bird SBE 43F',
     },
 }
 
@@ -66,9 +177,11 @@ def add_sensors(ds, dsa):
 
     sensor_name_type = {}
     for instr in sensors:
+        if instr in ['altimeter']:
+            continue
         attr_dict = eval(attrs[instr])
         if attr_dict['make_model'] not in sensor_vocabs.keys():
-            print(attr_dict['make_model'], "not found")
+            _log.error(f"sensor {attr_dict['make_model']} not found")
             continue
         var_dict = sensor_vocabs[attr_dict['make_model']]
         if 'serial' in attr_dict.keys():
@@ -99,35 +212,16 @@ def add_sensors(ds, dsa):
     return ds, dsa
 
 
-def convert_to_og1(ds, parameters=False, num_vals=10, postscript='R'):
+def convert_to_og1(ds, num_vals=None):
     """
     Based on example by Jen Seva https://github.com/OceanGlidersCommunity/OG-format-user-manual/pull/136/files
     Using variable names from OG1 vocab https://vocab.nerc.ac.uk/collection/OG1/current/
     Using units from collection P07 http://vocab.nerc.ac.uk/collection/P07/current/
     e.g. mass_concentration_of_chlorophyll_a_in_sea_water from https://vocab.nerc.ac.uk/collection/P07/current/CF14N7/
     :param ds: dataset to convert
-    :param parameters: True if you want to set the (optional) extra dimension PARAMS
+    :param num_vals: optional argument to subset input dataset to first num_values values default=None for no subset
     :return: converted dataset
     """
-    PARAMETER = []
-    PARAMETER_SENSOR = []
-    PARAMETER_UNITS = []
-
-    for var_name in list(ds):
-        if "QC" in var_name:
-            continue
-        var = ds[var_name]
-        att = var.attrs
-        PARAMETER.append(var_name)
-        if "units" not in att.keys():
-            att["units"] = "None"
-        if "sensors" in att.keys():
-            PARAMETER_SENSOR.append(att["sensors"])
-        elif "sensor" not in att.keys():
-            PARAMETER_SENSOR.append("glider")
-        else:
-            PARAMETER_SENSOR.append(att["sensor"].split("_")[-1])
-        PARAMETER_UNITS.append(att["units"])
     dsa = xr.Dataset()
     for var_name in list(ds) + list(ds.coords):
         if "_QC" in var_name:
@@ -149,10 +243,10 @@ def convert_to_og1(ds, parameters=False, num_vals=10, postscript='R'):
     dsa = dsa.set_coords(('TIME', 'LATITUDE', 'LONGITUDE', 'DEPTH'))
     for vname in ['LATITUDE', 'LONGITUDE', 'TIME']:
         dsa[f'{vname}_GPS'] = dsa[vname].copy()
-        dsa[f'{vname}_GPS'].values[dsa['PHASE'].values != 119] = np.nan
+        dsa[f'{vname}_GPS'].values[dsa['nav_state'].values != 119] = np.nan
         dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname.lower()} of each GPS location'
-    seaex_phase = dsa['PHASE'].values
-    standard_phase = np.zeros(len(seaex_phase))
+    seaex_phase = dsa['nav_state'].values
+    standard_phase = np.zeros(len(seaex_phase)).astype(int)
     standard_phase[seaex_phase == 115] = 3
     standard_phase[seaex_phase == 116] = 3
     standard_phase[seaex_phase == 119] = 3
@@ -160,16 +254,17 @@ def convert_to_og1(ds, parameters=False, num_vals=10, postscript='R'):
     standard_phase[seaex_phase == 118] = 5
     standard_phase[seaex_phase == 100] = 2
     standard_phase[seaex_phase == 117] = 1
-    dsa['PHASE'].values = standard_phase
-    dsa['PHASE'].attrs = {'long_name': "behavior of the glider at sea",
-                          'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'}
+    standard_phase[seaex_phase == 123] = 4
+    standard_phase[seaex_phase == 124] = 4
+    dsa['PHASE'] = xr.DataArray(standard_phase, coords=dsa['LATITUDE'].coords, attrs= {'long_name': "behavior of the glider at sea",
+                          'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'})
     ds, dsa = add_sensors(ds, dsa)
     attrs = ds.attrs
-    if parameters:
-        dsa["PARAMETER"] = ("N_PARAMETERS", PARAMETER, {})
-        dsa["PARAMETER_SENSOR"] = ("N_PARAMETERS", PARAMETER_SENSOR, {})
-        dsa["PARAMETER_UNITS"] = ("N_PARAMETERS", PARAMETER_UNITS, {})
     ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
+    if 'delayed' in ds.attrs['dataset_id']:
+        postscript = 'delayed'
+    else:
+        postscript = 'R'
     attrs['id'] = f"sea{str(attrs['glider_serial']).zfill(3)}_{ts}_{postscript}"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
     attrs['platform'] = 'sub-surface gliders'
@@ -189,7 +284,9 @@ def convert_to_og1(ds, parameters=False, num_vals=10, postscript='R'):
     attrs['rtqc_method_doi'] = "None"
     attrs['featureType'] = 'trajectory'
     attrs['Conventions'] = 'CF-1.10, OG-1.0'
-    attrs['comment'] = 'Dataset for demonstration purposes only. Original dataset truncated for the sake of simplicity'
+    if num_vals:
+        attrs[
+            'comment'] = f'Dataset for demonstration purposes only. Original dataset truncated to {num_vals} values for the sake of simplicity'
     attrs['start_date'] = attrs['time_coverage_start']
     dsa.attrs = attrs
     dsa['TRAJECTORY'] = xr.DataArray(ds.attrs['id'], attrs={'cf_role': 'trajectory_id', 'long_name': 'trajectory name'})
@@ -216,6 +313,9 @@ new_names = {
     "latitude": "LATITUDE",
     'longitude': 'LONGITUDE',
     'time': 'TIME',
+    'pitch': 'PITCH',
+    'roll': 'ROLL',
+    'heading': 'HEADING',
     'depth': 'DEPTH',
     'pressure': 'PRES',
     'conductivity': 'CNDC',
@@ -225,9 +325,27 @@ new_names = {
     'salinity': 'PSAL',
     'density': 'DENSITY',
     'profile_index': 'PROFILE_NUMBER',
-    'nav_state': 'PHASE',
     'adcp_Pressure': 'PRES_ADCP',
     'particulate_backscatter': 'BBP700',
+    'backscatter_scaled': 'BBP700',
+    'potential_temperature': 'THETA',
+    'down_irradiance_380': 'ED380',
+    'down_irradiance_490': 'ED490',
+    'downwelling_PAR': 'DPAR',
+    'temperature_oxygen': 'TEMP_OXYGEN',
+    'potential_density': 'POTDENS0',
+    'chlorophyll_raw': 'FLUOCHLA',
+    'ad2cp_pitch': 'AD2CP_PITCH',
+    'ad2cp_roll': 'AD2CP_ROLL',
+    'ad2cp_heading': 'AD2CP_HEADING',
+    'ad2cp_time': 'AD2CP_TIME',
+    'ad2cp_pressure': 'AD2CP_PRES',
+    'turbidity': 'TURB',
+    'cdom': 'CDOM',
+    'cdom_raw': 'FLUOCDOM',
+    'phycoerythrin_raw': 'FLUOPHYC',
+    'tke_dissipation_shear_1': 'EPSIFY01',
+    'tke_dissipation_shear_2': 'EPSIFY02',
 }
 
 attrs_dict = {
@@ -263,6 +381,17 @@ attrs_dict = {
             'calendar': "gregorian",
             'axis': 'T',
             'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/AYMD/',
+        },
+    "AD2CP_TIME":
+        {
+            'long_name': 'time of measurement',
+            'observation_type': 'measured',
+            'standard_name': 'time',
+            'units': 'seconds since 1970-01-01 00:00:00 UTC',
+            'calendar': "gregorian",
+            'axis': 'T',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/AYMD/',
+            'comment': 'measured by AD2CP',
         },
     'DEPTH':
         {
@@ -345,7 +474,17 @@ attrs_dict = {
             'valid_max': 42,
             'valid_min': -5,
             'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/',
-
+        },
+    "THETA":
+        {
+            'long_name': 'Potential temperature of the water body by computation using UNESCO 1983 algorithm.',
+            'observation_type': 'calculated',
+            'sources': 'salinity temperature pressure',
+            'standard_name': 'sea_water_potential_temperature',
+            'units': 'Celsius',
+            'valid_max': 42,
+            'valid_min': -5,
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/THETA/',
         },
     "DENSITY": {'long_name': 'The mass of a unit volume of any body of fresh or salt water',
                 'standard_name': 'sea_water_density',
@@ -363,7 +502,7 @@ attrs_dict = {
     'PHASE': {'long_name': 'behavior of the glider at sea',
               'comment': 'This is the variable NAV_STATE from the SeaExplorer nav file',
               'units': '1'},
-    "PRES_ADCP": {
+    "AD2CP_PRES": {
         'comment': 'adcp pressure sensor',
         'sensor': 'sensor_adcp',
         'long_name': 'Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor and correction to read zero at sea level',
@@ -382,23 +521,148 @@ attrs_dict = {
             'observation_type': 'calculated',
             'units': 'm-1',
             'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/BBP700/',
-            'processing': 'Particulate backscatter b_bp calculated following methods in the Ocean Observatories Initiative document DATA PRODUCT SPECIFICATION FOR OPTICAL BACKSCATTER (RED WAVELENGTHS) Version 1-05 Document Control Number 1341-00540 2014-05-28. Downloaded from https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf',
+            'processing': 'Particulate backscatter bbp calculated following methods in the Ocean Observatories Initiative document DATA PRODUCT SPECIFICATION FOR OPTICAL BACKSCATTER (RED WAVELENGTHS) Version 1-05 Document Control Number 1341-00540 2014-05-28. Downloaded from https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf',
         },
-
+    'ED380': {'average_method': 'geometric mean',
+              'long_name': 'The vertical component of light at 380nm wavelength travelling downwards',
+              'observation_type': 'measured',
+              'standard_name': '380nm_downwelling_irradiance',
+              'units': 'W m-2 nm-1',
+              'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/ED380/',
+              },
+    'ED490': {'average_method': 'geometric mean',
+              'long_name': 'The vertical component of light at 490nm wavelength travelling downwards',
+              'observation_type': 'measured',
+              'standard_name': '490nm_downwelling_irradiance',
+              'units': 'W m-2 nm-1',
+              'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/ED490/',
+              },
+    "DPAR":
+        {
+            'long_name': 'Downwelling vector irradiance as energy of electromagnetic radiation (PAR wavelengths) in the water body by cosine-collector radiometer.',
+            'observation_type': 'measured',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/DPAR/',
+        },
+    "PITCH":
+        {
+            'long_name': 'Orientation (pitch) of measurement platform by inclinometer',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/PITCH/',
+        },
+    "ROLL":
+        {
+            'long_name': 'Orientation (roll angle) of measurement platform by inclinometer',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/ROLL/',
+        },
+    "HEADING":
+        {
+            'long_name': 'Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/HEADING/',
+        },
+    "AD2CP_PITCH":
+        {
+            'long_name': 'Orientation (pitch) of measurement platform by inclinometer',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/PITCH/',
+            'comment': 'measured by AD2CP',
+        },
+    "AD2CP_ROLL":
+        {
+            'long_name': 'Orientation (roll angle) of measurement platform by inclinometer',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/ROLL/',
+            'comment': 'measured by AD2CP',
+        },
+    "AD2CP_HEADING":
+        {
+            'long_name': 'Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/HEADING/',
+            'comment': 'measured by AD2CP',
+        },
+    "TEMP_OXYGEN":
+        {
+            'long_name': 'Temperature of the water body by CTD ',
+            'observation_type': 'measured',
+            'standard_name': 'sea_water_temperature',
+            'comment': 'measured by oxygen optode',
+            'units': 'Celsius',
+            'valid_max': 42,
+            'valid_min': -5,
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/',
+        },
+    "POTDENS0":
+        {
+            'long_name': 'Potential density of water body at surface',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/POTDENS0/',
+        },
+    "FLUOCHLA":
+        {
+            'long_name': 'Chlorophyll-A signal from fluorescence sensor',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/FLUOCHLA/',
+        },
+    "TURB":
+        {
+            'long_name': 'Turbidity of water in the water body',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/TURB/',
+        },
+    "TCPUCHLA":
+        {
+            'long_name': 'Turbidity of water in the water body',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/TCPUCHLA/',
+        },
+    "CDOM":
+        {
+            'long_name': 'Concentration of coloured dissolved organic matter in sea water',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/CDOM/',
+        },
+    "FLUOCDOM":
+        {
+            'long_name': 'Raw fluorescence from coloured dissolved organic matter sensor',
+            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/FLUOCDOM/',
+        },
+    "FLUOPHYC":
+        {
+            'long_name': 'Phycoerythrin signal from fluorescence sensor',
+            'URI': 'http://vocab.nerc.ac.uk/collection/OG1/current/FLUOPHYC/',
+        },
+    "EPSIFY01":
+        {
+            'long_name': 'Log10 turbulent kinetic energy dissipation {epsilon} per unit volume of the water body by turbulence profiler shear sensor',
+            'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/EPSIFY01/',
+        },
+    "EPSIFY02":
+        {
+            'long_name': 'Log10 turbulent kinetic energy dissipation {epsilon} per unit volume of the water body by turbulence profiler shear sensor',
+            'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/EPSIFY02/',
+        },
 }
+
+vars_as_is = ['altimeter', 'nav_resource', 'angular_cmd', 'angular_pos', 'ballast_cmd', 'ballast_pos', 'dead_reckoning',
+              'declination', 'desired_heading', 'dive_num', 'internal_pressure', 'internal_temperature', 'linear_cmd', 
+              'linear_pos', 'security_level', 'voltage', 'distance_over_ground', 'ad2cp_beam1_cell_number1',
+              'ad2cp_beam2_cell_number1', 'ad2cp_beam3_cell_number1', 'ad2cp_beam4_cell_number1',
+              'vertical_distance_to_seafloor', 'profile_direction', 'profile_num', 'nav_state',]
+              #+ ['backscatter_raw', 'oxygen_phase', 'phycocyanin', 'phycocyanin_raw', 'down_irradiance_532', 'turbidity_raw', 'internal_temperature_PAR', 'methane_concentration', 'methane_raw_concentration', 'mets_raw_temperature', 'mets_temperature', 'nitrate_concentration', 'nitrate_molar_concentration', 'suna_internal_humidity', 'suna_internal_temperature'] # DELETE
 
 
 def standardise_og10(ds):
     dsa = xr.Dataset()
     dsa.attrs = ds.attrs
     for var_name in list(ds) + list(ds.coords):
+        if 'qc' in var_name:
+            continue
         if var_name in new_names.keys():
             name = new_names[var_name]
             dsa[name] = ('time', ds[var_name].values, attrs_dict[name])
+            for key, val in ds[var_name].attrs.items():
+                if key not in dsa[name].attrs.keys():
+                    dsa[name].attrs[key] = val
             qc_name = f'{var_name}_qc'
             if qc_name in list(ds):
                 dsa[f'{name}_QC'] = ('time', ds[qc_name].values, ds[qc_name].attrs)
                 dsa[name].attrs['ancillary_variables'] = f'{name}_QC'
+        else:
+            dsa[var_name] = ('time', ds[var_name].values, ds[var_name].attrs)
+            if var_name not in vars_as_is:
+                _log.error(f"variable {var_name} not translated. Will be added as-is")
+
     dsa = set_best_dtype(dsa)
     return dsa
 
