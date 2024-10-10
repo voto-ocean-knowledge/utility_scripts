@@ -210,11 +210,11 @@ def read_ctd(ctd_csv, locfile, df_base):
                 break
     with open(ctd_csv) as file:
         for i, line in enumerate(file):
-            if "SondeName=ASTD152-ALC-R02" in line:
+            if "SondeName" in line:
                 df["sonde_name"] = line.split("=")[1][:-1]
             if "SondeNo" in line:
                 df["sonde_number"] = line.split("=")[1][:-1]
-            if "CoefDate=2022/12/15" in line:
+            if "CoefDate" in line:
                 df["calibration_date"] = line.split("=")[1][:-1]
                 break
     df['calibration_date'] = pd.to_datetime(df['calibration_date'], format='%Y/%m/%d')
