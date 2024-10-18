@@ -1,10 +1,11 @@
 import pandas as pd
 import xarray as xr
-from pathlib import Path
 import numpy as np
-import matplotlib.pyplot as plt
 import pynmea2
 import datetime
+
+import utilities
+import vocabularies
 
 
 def parse_nrt():
@@ -212,53 +213,27 @@ def merge_sensors():
 
 
 def get_attrs(ds):
-    date_created = datetime.datetime.now().isoformat().split('.')[0]
+    ds = utilities.add_standard_global_attrs(ds)
     attrs = {
-        'platform': 'sub-surface gliders',
-        'platform_vocabulary': 'https://vocab.nerc.ac.uk/collection/L06/current/27/',
+        'platform': 'autonomous surface water vehicle',
+        'platform_vocabulary': 'https://vocab.nerc.ac.uk/collection/L06/current/3B/',
         'platform_serial_number': 'SB2120',
-        'acknowledgement': 'This study used data collected and made freely available by Voice of the Ocean Foundation ('
-                           'https://voiceoftheocean.org)',
         'area': 'Baltic Sea',
         'cdm_data_type': 'TrajectoryProfile',
-        'conventions': 'CF-1.10',
-        'institution_country': 'SWE',
-        'creator_email': 'callum.rollo@voiceoftheocean.org',
-        'creator_name': 'Callum Rollo',
-        'creator_type': 'Person',
-        'creator_url': 'https://observations.voiceoftheocean.org',
-        'date_created': date_created,
-        'date_issued': date_created,
-        'geospatial_lat_max': np.nanmax(ds.LATITUDE),
-        'geospatial_lat_min': np.nanmin(ds.LATITUDE),
-        'geospatial_lat_units': 'degrees_north',
-        'geospatial_lon_max': np.nanmax(ds.LONGITUDE),
-        'geospatial_lon_min': np.nanmin(ds.LONGITUDE),
-        'geospatial_lon_units': 'degrees_east',
-        'infoUrl': 'https://observations.voiceoftheocean.org',
-        'inspire': "ISO 19115",
-        'institution': 'Voice of the Ocean Foundation',
-        'institution_edmo_code': '5579',
         'keywords': 'CTD, Oceans, Ocean Pressure, Water Pressure, Ocean Temperature, Water Temperature, Salinity/Density, '
                     'Conductivity, Density, Salinity',
         'keywords_vocabulary': 'GCMD Science Keywords',
-        'licence': 'Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/) This study used data collected and made freely available by Voice of the Ocean Foundation (https://voiceoftheocean.org) accessed from https://erddap.observations.voiceoftheocean.org/erddap/index.html',
         "title": "Sailbuoy data from the Baltic",
-        'disclaimer': "Data, products and services from VOTO are provided 'as is' without any warranty as to fitness for "
-                      "a particular purpose.",
         'QC_indicator': 'L1',
-        'references': 'Voice of the Ocean Foundation',
-        'source': 'Voice of the Ocean Foundation',
-        'sourceUrl': 'https://observations.voiceoftheocean.org',
-        'standard_name_vocabulary': 'CF Standard Name Table v70',
-        'time_coverage_end': str(np.nanmax(ds.time)).split(".")[0],
-        'time_coverage_start': str(np.nanmin(ds.time)).split(".")[0],
-        'variables': list(ds)
     }
-    ts = pd.to_datetime(attrs['time_coverage_start']).strftime('%Y%m%dT%H%M')
+    ts = pd.to_datetime(ds.attrs['time_coverage_start']).strftime('%Y%m%dT%H%M')
     postscript = 'delayed'
     attrs['id'] = f"{attrs['platform_serial_number']}_{ts}_{postscript}"
-    return attrs
+    for key, val in attrs.items():
+        if key in ds.attrs.keys():
+            continue
+        ds.attrs[key] = val
+    return ds
 
 
 clean_names = {
@@ -287,186 +262,9 @@ clean_names = {
     'north_m': 'northward_displacement',
     'west_m': 'westward_displacement',
 }
-attrs_dict = {
-    'vertical_displacement': {'long_name': 'Vertical displacement of platform, from MOSE sensor',
-                              "sensor": "sensor_wave",
-                              "units": "m"},
-    'northward_displacement': {'long_name': 'northward displacement of platform, from MOSE sensor',
-                               "sensor": "sensor_wave",
-                               "units": "m"},
-    'westward_displacement': {'long_name': 'northward displacement of platform, from MOSE sensor',
-                              "sensor": "sensor_wave",
-                              "units": "m"},
-    'mean_wave_period': {'long_name': 'mean wave period, from MOSE sensor',
-                         "sensor": "sensor_wave",
-                         "units": "s"},
-    'maximum_wave_height': {'long_name': 'maximum wave height, from MOSE sensor',
-                            "sensor": "sensor_wave",
-                            "units": "m"},
-    'percentage_error_lines': {'long_name': 'percentage of error lines from MOSE sensor, used to calculate wave stats',
-                               "sensor": "sensor_wave",
-                               "units": "percent"},
-    'significant_wave_period': {
-        'long_name': 'Zero-crossing period of waves (highest one third) {significant wave period Ts} on the water body',
-        "sensor": "sensor_wave",
-        'units': 's',
-        'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/GTZHZZ01/'},
-    'significant_wave_height': {'long_name': 'Significant wave height of waves {Hs} on the water body',
-                                "sensor": "sensor_wave",
-                                'units': 'm',
-                                'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/GTDHZZ01/'},
-    'HUMIDITY': {'long_name': 'Relative humidity of the atmosphere',
-                 'units': 'percent',
-                 'sensor': 'sensor_meteorology',
-                 'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/CRELZZ01/'},
-    'PRESSURE_AIR': {'long_name': 'Pressure (spatial coordinate) exerted by the atmosphere',
-                     'units': 'dbar',
-                     'sensor': 'sensor_meteorology',
-                     'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/CAPBZZ01/'},
-    'TEMP_AIR': {'long_name': 'Temperature of the atmosphere by dry bulb thermometer',
-                 'units': 'Celsius',
-                 'sensor': 'sensor_meteorology',
-                 'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/CDTASS01/'},
-    'WIND_SPEED': {'long_name': 'Speed of wind {wind speed} in the atmosphere by in-situ anemometer',
-                   'units': 'm s-1',
-                   'sensor': 'sensor_meteorology',
-                   'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/EWSBSS01/'},
-    'WIND_DIRECTION': {
-        'long_name': 'Direction (from) of wind relative to True North {wind direction} in the atmosphere by in-situ anemometer',
-        'sensor': 'sensor_meteorology',
-        'URI': 'http://vocab.nerc.ac.uk/collection/P01/current/EWDASS01/'},
-    "LATITUDE": {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-                 'long_name': 'Latitude north',
-                 'observation_type': 'measured',
-                 'platform': 'platform',
-                 'reference': 'WGS84',
-                 'standard_name': 'latitude',
-                 'units': 'degrees_north',
-                 'valid_max': 90,
-                 'valid_min': -90,
-                 'axis': 'Y',
-                 'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/LAT/',
-                 },
-    "LONGITUDE":
-        {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-         'long_name': 'Longitude east',
-         'observation_type': 'measured',
-         'platform': 'platform',
-         'reference': 'WGS84',
-         'standard_name': 'longitude',
-         'units': 'degrees_east',
-         'valid_max': 180,
-         'valid_min': -180,
-         'axis': 'X',
-         'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/LON/',
-         },
-    "TIME":
-        {
-            'long_name': 'time of measurement',
-            'observation_type': 'measured',
-            'standard_name': 'time',
-            'units': 'seconds since 1970-01-01 00:00:00 UTC',
-            'calendar': "gregorian",
-            'axis': 'T',
-            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/AYMD/',
-        },
-    "CNDC": {
-        'sensor': 'sensor_ctd',
-        'long_name': 'Electrical conductivity of the water body by CTD',
-        'observation_type': 'measured',
-        'standard_name': 'sea_water_electrical_conductivity',
-        'units': 'mS cm-1',
-        'valid_max': 85.,
-        'valid_min': 0.,
-        'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/CNDC/',
-    },
-    "PRES": {
-        'comment': 'ctd pressure sensor',
-        'sensor': 'sensor_ctd',
-        'long_name': 'Pressure (spatial coordinate) exerted by the water body by profiling pressure sensor',
-        'observation_type': 'measured',
-        'positive': 'down',
-        'reference_datum': 'sea-surface',
-        'standard_name': 'sea_water_pressure',
-        'units': 'dbar',
-        'valid_max': 2000,
-        'valid_min': 0,
-        'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/PRES'
-    },
-    "PSAL": {'long_name': 'water salinity',
-             'standard_name': 'sea_water_practical_salinity',
-             'units': '1e-3',
-             'comment': 'Practical salinity of the water body by CTD and computation using UNESCO 1983 algorithm',
-             'sources': 'CNDC, TEMP, PRES',
-             'observation_type': 'calculated',
-             'sensor': 'sensor_ctd',
-             'valid_max': 40,
-             'valid_min': 0,
-             'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/PSAL/'
-             },
-    "TEMP":
-        {
-            'long_name': 'Temperature of the water body by CTD ',
-            'sensor': 'sensor_ctd',
-            'observation_type': 'measured',
-            'standard_name': 'sea_water_temperature',
-            'units': 'Celsius',
-            'valid_max': 42,
-            'valid_min': -5,
-            'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/TEMP/',
-        },
-    "PITCH":
-        {
-            'long_name': 'Orientation (pitch) of measurement platform by inclinometer',
-            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/PITCH/',
-            'units': 'degrees',
-        },
-    "ROLL":
-        {
-            'long_name': 'Orientation (roll angle) of measurement platform by inclinometer',
-            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/ROLL/',
-            'units': 'degrees',
-        },
-    "HEADING":
-        {
-            'long_name': 'Orientation (horizontal relative to magnetic north) of measurement platform {heading} by compass',
-            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/HEADING/',
-            'units': 'degrees',
-        },
-}
-
-sensor_vocabs = {
-    "RBR Legato3 CTD": {
-        'sensor_type': 'CTD',
-        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/130/',
-        'sensor_maker': 'RBR',
-        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0049/',
-        'sensor_model': 'RBR Legato3 CTD',
-        'sensor_model_vocabulary': 'https://vocab.nerc.ac.uk/collection/L22/current/TOOL1745/',
-        'long_name': 'RBR Legato3 CTD',
-    },
-    "Gill Instruments GMX560": {
-        'sensor_type': 'meteorological packages',
-        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/102/',
-        'sensor_maker': 'Gill Instruments',
-        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0121/',
-        'sensor_model': 'Gill Instruments MaxiMet Marine GMX560 weather station',
-        'sensor_model_vocabulary': 'http://vocab.nerc.ac.uk/collection/L22/current/TOOL2098/',
-        'long_name': 'Gill Instruments MaxiMet Marine GMX560 weather station',
-    },
-    "Datawell MOSE-G1000": {
-        'sensor_type': 'wave recorders',
-        'sensor_type_vocabulary': 'https://vocab.nerc.ac.uk/collection/L05/current/110/',
-        'sensor_maker': 'Datawell B.V.',
-        'sensor_maker_vocabulary': 'https://vocab.nerc.ac.uk/collection/L35/current/MAN0124/',
-        'sensor_model': 'Datawell MOSE-G1000',
-        'sensor_model_vocabulary': 'Datawell MOSE-G1000',
-        'long_name': 'Datawell MOSE-G1000',
-    },
-}
 
 sensors = {
-    "sensor_ctd": {"sensor": "RBR Legato3 CTD",
+    "sensor_ctd": {"sensor": "RBR legato CTD",
                    'serial_number': 207496,
                    'calibration_date': '2021-06-22'
                    },
@@ -481,7 +279,7 @@ sensors = {
 
 def add_sensors(ds):
     for sensor_id, serial_dict in sensors.items():
-        sensor_dict = sensor_vocabs[serial_dict['sensor']]
+        sensor_dict = vocabularies.sensor_vocabs[serial_dict['sensor']]
         for key, item in serial_dict.items():
             if key == 'sensor':
                 continue
@@ -499,26 +297,28 @@ def export_dataset():
     for col_name in list(df):
         if col_name in clean_names.keys():
             name = clean_names[col_name]
-            ds[name] = ('time', df[col_name], attrs_dict[name])
+            ds[name] = ('time', df[col_name], vocabularies.vocab_attrs[name])
         else:
             print(f"fail for {col_name}")
     # cut dataset down to active deployed period
     start = "2024-05-29T09:00:00"
     end = "2024-07-28T06:00:00"
     ds = ds.sel(time=slice(start, end))
-    ds.attrs = get_attrs(ds)
+    ds = get_attrs(ds)
     ds = add_sensors(ds)
     ds.attrs["variables"] = list(ds.variables)
     ds['trajectory'] = xr.DataArray(1, attrs={"cf_role": "trajectory_id"})
     ds.to_netcdf(f"data_out/{ds.attrs['id']}.nc")
-    #ds = ds.sel(time=slice(start, "2024-05-30T09:00:00"))
+    # ds = ds.sel(time=slice(start, "2024-05-30T09:00:00"))
     ds.to_netcdf(f"/home/callum/Documents/erddap/local_dev/erddap-gold-standard/datasets/{ds.attrs['id']}.nc")
 
 
 if __name__ == '__main__':
     # parse_nrt()
     # parse_legato()
+    # parse_mose()
     # merge_mose()
+    # parse_gmx560()
     # merge_gmx560()
     # merge_sensors()
     export_dataset()

@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 import subprocess
+import datetime
 from pathlib import Path
 _log = logging.getLogger(__name__)
 
@@ -154,3 +155,56 @@ def mailer(subject, message, recipient="callum.rollo@voiceoftheocean.org"):
             send_script = possible_loc
             break
     subprocess.check_call(['/usr/bin/bash', send_script, message, subject, recipient])
+
+
+def add_standard_global_attrs(ds):
+    date_created = datetime.datetime.now().isoformat().split('.')[0]
+    attrs = {
+        'acknowledgement': 'This study used data collected and made freely available by Voice of the Ocean Foundation ('
+                           'https://voiceoftheocean.org)',
+        'conventions': 'CF-1.11',
+        'institution_country': 'SWE',
+        'creator_email': 'callum.rollo@voiceoftheocean.org',
+        'creator_name': 'Callum Rollo',
+        'creator_type': 'Person',
+        'creator_url': 'https://observations.voiceoftheocean.org',
+        'date_created': date_created,
+        'date_issued': date_created,
+        'geospatial_lat_max': np.nanmax(ds.LATITUDE),
+        'geospatial_lat_min': np.nanmin(ds.LATITUDE),
+        'geospatial_lat_units': 'degrees_north',
+        'geospatial_lon_max': np.nanmax(ds.LONGITUDE),
+        'geospatial_lon_min': np.nanmin(ds.LONGITUDE),
+        'geospatial_lon_units': 'degrees_east',
+        'contributor_email': 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , ',
+        'contributor_role_vocabulary': 'https://vocab.nerc.ac.uk/collection/W08/',
+        'contributor_role': 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,',
+        'contributing_institutions': 'Voice of the Ocean Foundation',
+        'contributing_institutions_role': 'Operator',
+        'contributing_institutions_role_vocabulary': 'https://vocab.nerc.ac.uk/collection/W08/current/',
+        'agency': 'Voice of the Ocean',
+        'agency_role': 'contact point',
+        'agency_role_vocabulary': 'https://vocab.nerc.ac.uk/collection/C86/current/',
+        'infoUrl': 'https://observations.voiceoftheocean.org',
+        'inspire': "ISO 19115",
+        'institution': 'Voice of the Ocean Foundation',
+        'institution_edmo_code': '5579',
+        'keywords': 'CTD, Oceans, Ocean Pressure, Water Pressure, Ocean Temperature, Water Temperature, Salinity/Density, '
+                    'Conductivity, Density, Salinity',
+        'keywords_vocabulary': 'GCMD Science Keywords',
+        'licence': 'Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/) This study used data collected and made freely available by Voice of the Ocean Foundation (https://voiceoftheocean.org) accessed from https://erddap.observations.voiceoftheocean.org/erddap/index.html',
+        'disclaimer': "Data, products and services from VOTO are provided 'as is' without any warranty as to fitness for "
+                      "a particular purpose.",
+        'references': 'Voice of the Ocean Foundation',
+        'source': 'Voice of the Ocean Foundation',
+        'sourceUrl': 'https://observations.voiceoftheocean.org',
+        'standard_name_vocabulary': 'CF Standard Name Table v70',
+        'time_coverage_end': str(np.nanmax(ds.time)).split(".")[0],
+        'time_coverage_start': str(np.nanmin(ds.time)).split(".")[0],
+        'variables': list(ds)
+    }
+    for key, val in attrs.items():
+        if key in ds.attrs.keys():
+            continue
+        ds.attrs[key] = val
+    return ds
