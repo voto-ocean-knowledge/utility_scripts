@@ -178,11 +178,7 @@ attrs = {
                   "a particular purpose."}
 
 
-def read_ctd(ctd_csv, locfile, df_base):
-    if df_base.isnull().all().all():
-        cast_number = 0
-    else:
-        cast_number = df_base.cast_number.max() + 1
+def read_ctd(ctd_csv, locfile):
     locations = pd.read_csv(locfile, sep=";")
     fn = ctd_csv.name.split(".")[0]
     rows = locations[locations.File == fn]
@@ -221,7 +217,6 @@ def read_ctd(ctd_csv, locfile, df_base):
     df["filename"] = row.File
     df["longitude"] = row.Longitude
     df["latitude"] = row.Latitude
-    df["cast_number"] = cast_number
     if 'Depth [m]' in list(df):
         df["Press. [dbar]"] = gsw.p_from_z(-df['Depth [m]'], row.Latitude)
     if not 'DO [μmol/L]' in list(df):
@@ -234,19 +229,13 @@ def read_ctd(ctd_csv, locfile, df_base):
             df = df.rename(columns={col: clean_names[col]})
     df = df[list(set(list(attrs_dict.keys()) + ["TIME"]).intersection(set(list(df))))]
     df["TIME"] = df.TIME.astype('datetime64[ns]')
-    df_base = pd.concat((df_base, df))
     return df_base
 
 
-def load_cnv_file(ctd_csv, df_base):
+def load_cnv_file(ctd_csv):
     profile = fCNV(ctd_csv)
 
     df = profile.as_DataFrame()
-
-    if df_base.isnull().all().all():
-        cast_number = 0
-    else:
-        cast_number = df_base.cast_number.max() + 1
     fn = ctd_csv.name.split(".")[0]
     attrs = profile.attrs
 
@@ -255,7 +244,6 @@ def load_cnv_file(ctd_csv, df_base):
     else:
         df["sonde_name"] = ctd_csv.name.split("_")[0]
     df["filename"] = fn
-    df["cast_number"] = cast_number
     if not 'DO [μmol/L]' in list(df):
         df['DO [μmol/L]'] = df['oxygen_ml_L'] * 22.39244
     for col in list(df):
@@ -264,7 +252,6 @@ def load_cnv_file(ctd_csv, df_base):
 
     df = df[list(set(list(attrs_dict.keys()) + ["TIME"]).intersection(set(list(df))))]
     df["TIME"] = df.TIME.astype('datetime64[ns]')
-    df_base = pd.concat((df_base, df))
     return df_base
 
 
@@ -306,14 +293,14 @@ def flag_ctd(ds):
 def main():
     location_files = list(Path("/mnt/samba/").glob("*/5_Calibration/CTD/*cation*.txt"))
     missing_ctd_files = []
-    df = pd.DataFrame()
+    casts = []
     fn = 0
     cnv_files = list(Path("/mnt/samba/").glob("*/5_Calibration/*/*SBE09*.cnv*")) + list(
         Path("/mnt/samba/").glob("*/5_Calibration/*/*SBE19*EDITED*.cnv*"))
     for filename in cnv_files:
         _log.info(f"Start add cnv {filename}")
         try:
-            df = load_cnv_file(filename, df)
+            casts.append(load_cnv_file(filename))
         except:
             _log.error(f"failed with {filename}")
             mailer("ctd-process", f"failed to process ctd {filename}")
@@ -332,13 +319,17 @@ def main():
         for ctd_csv in csv_files:
             _log.info(f"Start add {ctd_csv}")
             try:
-                df = read_ctd(ctd_csv, locfile, df)
+                casts.append(ctd_csv, locfile)
             except:
                 _log.error(f"failed with {ctd_csv}")
                 mailer("ctd-process", f"failed to process ctd {csv_files}")
                 continue
             _log.info(f"Added {ctd_csv}")
             fn += 1
+    # renumber profiles, so that profile_num still is unique in concat-dataset
+    for index, cast in enumerate(casts):
+        cast['cast_number'] = index
+    df = pd.concat(casts)
     ds = ds_from_df(df)
     _log.info(f"total ctds = {fn}")
     rename_dict = {#'TIME': "time",
