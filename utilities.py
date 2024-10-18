@@ -71,8 +71,9 @@ def encode_times_og1(ds):
                     ds[var_name].attrs.pop(drop_attr)
                 if drop_attr in ds[var_name].encoding.keys():
                     ds[var_name].encoding.pop(drop_attr)
-            ds[var_name].attrs["units"] = "seconds since 1970-01-01T00:00:00Z"
-            ds[var_name].attrs["calendar"] = "gregorian"
+            if var_name.lower()=='time':
+                ds[var_name].attrs["units"] = "seconds since 1970-01-01T00:00:00Z"
+                ds[var_name].attrs["calendar"] = "gregorian"
     return ds
 
 
