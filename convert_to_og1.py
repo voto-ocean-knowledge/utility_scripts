@@ -245,6 +245,8 @@ def convert_to_og1(ds, num_vals=None):
         dsa[f'{vname}_GPS'] = dsa[vname].copy()
         dsa[f'{vname}_GPS'].values[dsa['nav_state'].values != 119] = np.nan
         dsa[f'{vname}_GPS'].attrs['long_name'] = f'{vname.lower()} of each GPS location'
+    dsa['LATITUDE_GPS'].attrs['URI'] = "https://vocab.nerc.ac.uk/collection/OG1/current/LAT_GPS/"
+    dsa['LONGITUDE_GPS'].attrs['URI'] = "https://vocab.nerc.ac.uk/collection/OG1/current/LON_GPS/"
     seaex_phase = dsa['nav_state'].values
     standard_phase = np.zeros(len(seaex_phase)).astype(int)
     standard_phase[seaex_phase == 115] = 3
@@ -256,8 +258,9 @@ def convert_to_og1(ds, num_vals=None):
     standard_phase[seaex_phase == 117] = 1
     standard_phase[seaex_phase == 123] = 4
     standard_phase[seaex_phase == 124] = 4
-    dsa['PHASE'] = xr.DataArray(standard_phase, coords=dsa['LATITUDE'].coords, attrs= {'long_name': "behavior of the glider at sea",
-                          'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'})
+    dsa['PHASE'] = xr.DataArray(standard_phase, coords=dsa['LATITUDE'].coords,
+                                attrs={'long_name': "behavior of the glider at sea",
+                                       'phase_vocabulary': 'https://github.com/OceanGlidersCommunity/OG-format-user-manual/blob/main/vocabularyCollection/phase.md'})
     ds, dsa = add_sensors(ds, dsa)
     attrs = ds.attrs
     ts = pd.to_datetime(ds.time_coverage_start).strftime('%Y%m%dT%H%M')
@@ -267,8 +270,8 @@ def convert_to_og1(ds, num_vals=None):
         postscript = 'R'
     attrs['id'] = f"sea{str(attrs['glider_serial']).zfill(3)}_{ts}_{postscript}"
     attrs['title'] = 'OceanGliders example file for SeaExplorer data'
-    attrs['platform'] = 'sub-surface gliders'
-    attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/27/'
+    attrs['platform'] = 'autonomous surface water vehicle'
+    attrs['platform_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/L06/current/3B//'
     attrs['contributor_email'] = 'callum.rollo@voiceoftheocean.org, louise.biddle@voiceoftheocean.org, , , , , , '
     attrs['contributor_role_vocabulary'] = 'https://vocab.nerc.ac.uk/collection/W08/'
     attrs['contributor_role'] = 'Data scientist, PI, Operator, Operator, Operator, Operator, Operator, Operator,'
@@ -328,6 +331,7 @@ new_names = {
     'adcp_Pressure': 'PRES_ADCP',
     'particulate_backscatter': 'BBP700',
     'backscatter_scaled': 'BBP700',
+    'backscatter_raw': 'RBBP700',
     'potential_temperature': 'THETA',
     'down_irradiance_380': 'ED380',
     'down_irradiance_490': 'ED490',
@@ -343,6 +347,7 @@ new_names = {
     'turbidity': 'TURB',
     'cdom': 'CDOM',
     'cdom_raw': 'FLUOCDOM',
+    'phycoerythrin': 'PHYC',
     'phycoerythrin_raw': 'FLUOPHYC',
     'tke_dissipation_shear_1': 'EPSIFY01',
     'tke_dissipation_shear_2': 'EPSIFY02',
@@ -350,7 +355,7 @@ new_names = {
 
 attrs_dict = {
     "LATITUDE": {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-                 'long_name': 'latitude of each measurement and GPS location',
+                 'long_name': 'Latitude north',
                  'observation_type': 'measured',
                  'platform': 'platform',
                  'reference': 'WGS84',
@@ -359,10 +364,11 @@ attrs_dict = {
                  'valid_max': 90,
                  'valid_min': -90,
                  'axis': 'Y',
+                 'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/LAT/',
                  },
     "LONGITUDE":
         {'coordinate_reference_frame': 'urn:ogc:crs:EPSG::4326',
-         'long_name': 'longitude of each measurement and GPS location',
+         'long_name': 'Longitude east',
          'observation_type': 'measured',
          'platform': 'platform',
          'reference': 'WGS84',
@@ -371,6 +377,7 @@ attrs_dict = {
          'valid_max': 180,
          'valid_min': -180,
          'axis': 'X',
+         'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/LON/',
          },
     "TIME":
         {
@@ -523,6 +530,13 @@ attrs_dict = {
             'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/BBP700/',
             'processing': 'Particulate backscatter bbp calculated following methods in the Ocean Observatories Initiative document DATA PRODUCT SPECIFICATION FOR OPTICAL BACKSCATTER (RED WAVELENGTHS) Version 1-05 Document Control Number 1341-00540 2014-05-28. Downloaded from https://oceanobservatories.org/wp-content/uploads/2015/10/1341-00540_Data_Product_SPEC_FLUBSCT_OOI.pdf',
         },
+    "RBBP700":
+        {
+            'long_name': 'Raw signal from backscattering sensor.',
+            'observation_type': 'observed',
+            'units': '1',
+            'URI': 'https://vocab.nerc.ac.uk/collection/P02/current/RBBP700/',
+        },
     'ED380': {'average_method': 'geometric mean',
               'long_name': 'The vertical component of light at 380nm wavelength travelling downwards',
               'observation_type': 'measured',
@@ -594,7 +608,7 @@ attrs_dict = {
         },
     "FLUOCHLA":
         {
-            'long_name': 'Chlorophyll-A signal from fluorescence sensor',
+            'long_name': 'Raw signal (counts) of instrument output by in-situ chlorophyll fluorometer',
             'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/FLUOCHLA/',
         },
     "TURB":
@@ -617,6 +631,11 @@ attrs_dict = {
             'long_name': 'Raw fluorescence from coloured dissolved organic matter sensor',
             'URI': 'https://vocab.nerc.ac.uk/collection/OG1/current/FLUOCDOM/',
         },
+    "PHYC":
+        {
+            'long_name': 'Phycoerythrin concentration per unit volume of fresh or salt water.',
+            'URI': 'http://vocab.nerc.ac.uk/collection/OG1/current/PHYC/',
+        },
     "FLUOPHYC":
         {
             'long_name': 'Phycoerythrin signal from fluorescence sensor',
@@ -635,11 +654,13 @@ attrs_dict = {
 }
 
 vars_as_is = ['altimeter', 'nav_resource', 'angular_cmd', 'angular_pos', 'ballast_cmd', 'ballast_pos', 'dead_reckoning',
-              'declination', 'desired_heading', 'dive_num', 'internal_pressure', 'internal_temperature', 'linear_cmd', 
+              'declination', 'desired_heading', 'dive_num', 'internal_pressure', 'internal_temperature', 'linear_cmd',
               'linear_pos', 'security_level', 'voltage', 'distance_over_ground', 'ad2cp_beam1_cell_number1',
               'ad2cp_beam2_cell_number1', 'ad2cp_beam3_cell_number1', 'ad2cp_beam4_cell_number1',
-              'vertical_distance_to_seafloor', 'profile_direction', 'profile_num', 'nav_state',]
-              #+ ['backscatter_raw', 'oxygen_phase', 'phycocyanin', 'phycocyanin_raw', 'down_irradiance_532', 'turbidity_raw', 'internal_temperature_PAR', 'methane_concentration', 'methane_raw_concentration', 'mets_raw_temperature', 'mets_temperature', 'nitrate_concentration', 'nitrate_molar_concentration', 'suna_internal_humidity', 'suna_internal_temperature'] # DELETE
+              'vertical_distance_to_seafloor', 'profile_direction', 'profile_num', 'nav_state', ]
+
+
+# + ['backscatter_raw', 'oxygen_phase', 'phycocyanin', 'phycocyanin_raw', 'down_irradiance_532', 'turbidity_raw', 'internal_temperature_PAR', 'methane_concentration', 'methane_raw_concentration', 'mets_raw_temperature', 'mets_temperature', 'nitrate_concentration', 'nitrate_molar_concentration', 'suna_internal_humidity', 'suna_internal_temperature'] # DELETE
 
 
 def standardise_og10(ds):
