@@ -12,7 +12,11 @@ expected_adcp_fails = [(66, 16)]
 
 
 def adcp_status(glider, mission):
-    pld_file = list(Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/").glob("*pld1.raw.*gz"))[0]
+    pld_files = list(Path(f"/data/data_raw/complete_mission/SEA{glider}/M{mission}/").glob("*pld1.raw.*gz"))
+    if not pld_files:
+        return False
+    pld_file = pld_files[0]
+
     df = pd.read_csv(pld_file, sep=";")
     if (glider, mission) in expected_adcp_fails:
         _log.info("no adcp data expected, none recovered during mission")

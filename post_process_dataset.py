@@ -83,6 +83,18 @@ def fix_variables(ds):
     return ds
 
 
+def nan_bad_depths(ds):
+    ds['depth'][ds['depth'] > int(ds['depth'].attrs['valid_max'])] = np.nan
+    ds['pressure'][ds['pressure'] > int(ds['pressure'].attrs['valid_max'])] = np.nan
+    return ds
+
+
+def nan_bad_locations(ds):
+    ds['longitude'].values[ds['longitude_qc'] > 3] = np.nan
+    ds['latitude'].values[ds['latitude_qc'] > 3] = np.nan
+    return ds
+
+
 def post_process(ds):
     _log.info("start post process")
     ds = salinity_pressure_correction(ds)
@@ -92,8 +104,9 @@ def post_process(ds):
     if "backscatter_scaled" in list(ds):
         ds = calculate_bbp(ds)
     ds = fix_variables(ds)
+    ds = nan_bad_depths(ds)
+    ds = nan_bad_locations(ds)
     ds = ds.sortby("time")
     _log.info("complete post process")
     return ds
-
 
