@@ -7,9 +7,11 @@ import pandas as pd
 import pathlib
 import os
 from utilities import mailer
+
 script_dir = pathlib.Path(__file__).parent.absolute()
 os.chdir(script_dir)
 import logging
+
 _log = logging.getLogger(__name__)
 
 
@@ -27,7 +29,7 @@ def enough_datasets(df_datasets):
                             "nrt": nrt, "delayed": complete},
                            index=[len(total_datasets)])
     if total < total_datasets.total.max():
-       mailer("cherddap", "total datasets decreased")
+        mailer("cherddap", "total datasets decreased")
     total_datasets = pd.concat((total_datasets, new_row))
     total_datasets.to_csv("total_datasets.csv", index=False)
 
@@ -64,14 +66,16 @@ def nrt_vs_complete(df_datasets):
 
     for this_dataset in df_delayed.index:
         if this_dataset not in df_nrt.index:
-            mailer("cherdap",f"{this_dataset} not found in nrt. Last update:{df_delayed.loc[this_dataset]['maxTime (UTC)']}")
+            mailer("cherdap",
+                   f"{this_dataset} not found in nrt. Last update:{df_delayed.loc[this_dataset]['maxTime (UTC)']}")
     return df_datasets
 
 
 def bad_depths(df_datasets):
     _log.info("Check bad depths")
     if len(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)']) > 0:
-        mailer("cherddap", f"bad altitude (glider depth): {list(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)'].index)}")
+        mailer("cherddap",
+               f"bad altitude (glider depth): {list(df_datasets[df_datasets['maxAltitude (m)'] < -2000]['maxAltitude (m)'].index)}")
 
 
 def bad_dataset_id(df_datasets):
@@ -80,7 +84,7 @@ def bad_dataset_id(df_datasets):
     for dataset_id, row in df_datasets.iterrows():
         name = row["title"]
         if "adcp" in dataset_id:
-            #print("skip namecheck for adcp data")
+            # print("skip namecheck for adcp data")
             continue
         if " " in name and "King" not in name:
             num_title = int(name[3:6])
@@ -108,10 +112,10 @@ def profile_num_vs_dive_num(e, dataset_id):
     ds_sort = ds.sortby('time')
     if not ds.time.equals(ds_sort.time):
         mailer("cherddap", "datasets not sorted by time")
-    profiles = len(np.unique(ds.profile_num)) 
+    profiles = len(np.unique(ds.profile_num))
     dives = len(np.unique(ds.dive_num))
     if abs(profiles / 2 - dives) > 3:
-        mailer("cherddap", f"missmatch between {dataset_id} profile_num {profiles} and dive_num {dives} ({dives*2})")
+        mailer("cherddap", f"missmatch between {dataset_id} profile_num {profiles} and dive_num {dives} ({dives * 2})")
 
 
 def sensible_values(e, dataset_id):
@@ -159,16 +163,16 @@ def international_waters_check(e, dataset_id):
         "dive_num",
         "vertical_distance_to_seafloor"
     ]
-    url = e.get_download_url()
-    df = pd.read_csv(url, skiprows=[1])
+    df = e.to_pandas()
+    df = df.rename({'longitude (degrees_east)': 'longitude',
+                    'latitude (degrees_north)': 'latitude',
+                    'dive_num (None)': 'dive_num',
+                    'vertical_distance_to_seafloor (m)': 'vertical_distance_to_seafloor'}, axis=1)
     df_glider = df[~np.isnan(df["vertical_distance_to_seafloor"])].groupby('dive_num').mean()
     df_12nm = gp.read_file("/data/third_party/eez_12nm/eez_12nm_filled.geojson")
     # extend the Swedish territorial waters by a buffer lenght
     df_12nm_extend = df_12nm.copy()
     df_12nm_extend = df_12nm_extend.to_crs('epsg:3152')
-    # add buffer of 0.5 nm
-    buffer_length_in_meters = 0.5 * 1852
-    df_12nm_extend['geometry'] = df_12nm_extend.geometry.buffer(buffer_length_in_meters)
     df_12nm_extend_in = df_12nm_extend.to_crs(epsg=4326)
     # Create minimal dataset and group it by dives
     df_glider = gp.GeoDataFrame(df_glider, geometry=gp.points_from_xy(df_glider.longitude, df_glider.latitude))
@@ -176,6 +180,8 @@ def international_waters_check(e, dataset_id):
     df_glider = df_glider.set_crs(epsg=4326)
     df_12nm_extend = df_12nm_extend_in.to_crs(df_glider.crs)
     df_12nm_extend = gp.sjoin(df_12nm_extend, df_glider, predicate='contains')
+    if df_12nm_extend.empty:
+        return
     df_glider.index.rename("index", inplace=True)
     df_glider["dive_num"] = df_glider.index
     df_12nm_extend_id = df_12nm_extend[["index_right", "sovereign1"]]
@@ -211,7 +217,7 @@ def datasets_to_emodnet(df_datasets):
             mailer("cherddap", msg)
     except httpx.HTTPError:
         df_emodnet = pd.read_csv(e_emodnet.get_search_url(search_for="voto", response="csv"))
-        df_emodent_voto = df_emodnet[df_emodnet["Dataset ID"].str[:4]=="VOTO"]
+        df_emodent_voto = df_emodnet[df_emodnet["Dataset ID"].str[:4] == "VOTO"]
         emodent_datasets = df_emodent_voto["Dataset ID"].str[5:].values
         check_names = list(df_nrt.index) + list(df_delayed.index)
         lost_datasets = list(set(check_names).difference(set(emodent_datasets)))
@@ -235,7 +241,8 @@ def adcp_proc_check(e):
 
 def good_times():
     _log.warning("TODO: check times of all datetime like columns are in expected range")
-    _log.warning("TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
+    _log.warning(
+        "TODO: check that nrt and complete mission have similar time ranges. Check all or big mission as example")
 
 
 def manual_qc():
@@ -247,6 +254,7 @@ def main():
         server="https://erddap.observations.voiceoftheocean.org/erddap",
         protocol="tabledap",
     )
+    international_waters_check(e, 'nrt_SEA044_M91')
     # Fetch dataset list
     e.response = "csv"
     e.dataset_id = "allDatasets"
@@ -264,12 +272,12 @@ def main():
     nrt = df_datasets.index[df_datasets.index.str[:3] == "nrt"]
     num_ds = len(delayed)
     num_nrt = len(nrt)
-    unit_check(e, nrt[np.random.randint(0, num_nrt-1)])
-    profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds-1)])
-    sensible_values(e, nrt[np.random.randint(0, num_ds-1)])
-    sensible_values(e, delayed[np.random.randint(0, num_ds-1)])
+    unit_check(e, nrt[np.random.randint(0, num_nrt - 1)])
+    profile_num_vs_dive_num(e, delayed[np.random.randint(0, num_ds - 1)])
+    sensible_values(e, nrt[np.random.randint(0, num_ds - 1)])
+    sensible_values(e, delayed[np.random.randint(0, num_ds - 1)])
     international_waters_check(e, "nrt_SEA067_M27")
-    international_waters_check(e, nrt[np.random.randint(0, num_nrt-1)])
+    international_waters_check(e, nrt[np.random.randint(0, num_nrt - 1)])
     adcp_proc_check(e)
     good_times()
     manual_qc()
