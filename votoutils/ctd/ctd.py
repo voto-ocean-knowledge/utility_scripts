@@ -5,9 +5,9 @@ import datetime
 import subprocess
 import logging
 import gsw
-from utilities import encode_times
+from votoutils.utilities.utilities import encode_times
 from seabird.cnv import fCNV
-from utilities import mailer
+from votoutils.utilities.utilities import mailer
 import pathlib
 import sys
 script_dir = pathlib.Path(__file__).parent.absolute()

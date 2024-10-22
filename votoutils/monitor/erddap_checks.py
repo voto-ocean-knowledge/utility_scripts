@@ -6,7 +6,7 @@ import geopandas as gp
 import pandas as pd
 import pathlib
 import os
-from utilities import mailer
+from votoutils.utilities.utilities import mailer
 
 script_dir = pathlib.Path(__file__).parent.absolute()
 os.chdir(script_dir)

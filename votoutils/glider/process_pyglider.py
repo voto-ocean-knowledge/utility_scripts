@@ -8,7 +8,7 @@ import polars as pl
 import xarray as xr
 from geocode import get_seas_merged_nav_nc
 from post_process_dataset import post_process
-from utilities import encode_times, set_best_dtype
+from votoutils.utilities.utilities importencode_times, set_best_dtype
 from file_operations import clean_nrt_bad_files
 script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]

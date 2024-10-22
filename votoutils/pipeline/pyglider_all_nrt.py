@@ -6,7 +6,7 @@ import logging
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
-from process_pyglider import proc_pyglider_l0
+from votoutils.glider.process_pyglider import proc_pyglider_l0
 
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/pyglider_all_nrt.log',

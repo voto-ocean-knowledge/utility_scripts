@@ -6,7 +6,7 @@ import sys
 import os
 import json
 import subprocess
-from utilities import mailer
+from votoutils.utilities.utilities import mailer
 script_dir = Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)

@@ -1,8 +1,8 @@
 import xarray as xr
 from pathlib import Path
 import subprocess
-from office_check_glider_files import list_missions, skip_projects, secrets
-from utilities import mailer
+from votoutils.monitor.office_check_glider_files import list_missions, skip_projects, secrets
+from votoutils.utilities.utilities import mailer
 import logging
 _log = logging.getLogger(__name__)
 base = Path(secrets["data_path"])

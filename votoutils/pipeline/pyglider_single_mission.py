@@ -14,8 +14,8 @@ script_dir = pathlib.Path(__file__).parent.absolute()
 parent_dir = script_dir.parents[0]
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
-from utilities import natural_sort, match_input_files
-from process_pyglider import proc_pyglider_l0
+from votoutils.utilities.utilities import natural_sort, match_input_files
+from votoutils.glider.process_pyglider import proc_pyglider_l0
 
 _log = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ import argparse
 import shutil
 import logging
 import subprocess
-from utilities import encode_times, set_best_dtype
+from votoutils.utilities.utilities importencode_times, set_best_dtype
 import geocode
 _log = logging.getLogger(__name__)
 

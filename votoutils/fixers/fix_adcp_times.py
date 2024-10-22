@@ -1,7 +1,7 @@
 import xarray as xr
 from pathlib import Path
 import shutil
-from utilities import encode_times
+from votoutils.utilities.utilities import encode_times
 import logging
 import pandas as pd
 _log = logging.getLogger(__name__)

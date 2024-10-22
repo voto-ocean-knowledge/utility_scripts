@@ -6,7 +6,7 @@ import datetime
 
 import re
 import pandas as pd
-from utilities import mailer
+from votoutils.utilities.utilities import mailer
 import logging
 _log = logging.getLogger(__name__)
 

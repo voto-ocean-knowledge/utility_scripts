@@ -2,7 +2,7 @@ import numpy as np
 import re
 from post_process_optics import betasw_ZHH2009
 import logging
-from geocode import filter_territorial_data
+from votoutils.utilities.geocode import filter_territorial_data
 from post_process_ctd import salinity_pressure_correction, correct_rbr_lag
 _log = logging.getLogger(__name__)
 

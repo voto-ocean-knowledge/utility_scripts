@@ -4,8 +4,8 @@ import numpy as np
 import pynmea2
 import datetime
 
-import utilities
-import vocabularies
+from votoutils.utilities import utilities
+from votoutils.utilities import vocabularies
 
 
 def parse_nrt():

@@ -5,7 +5,7 @@ import numpy as np
 import logging
 from pathlib import Path
 from pyglider_single_mission import process
-from utilities import mailer
+from votoutils.utilities.utilities import mailer
 _log = logging.getLogger(__name__)
 
 expected_adcp_fails = [(66, 16)]

@@ -10,9 +10,9 @@ import pandas as pd
 script_dir = pathlib.Path(__file__).parent.absolute()
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
-from process_pyglider import proc_pyglider_l0
+from votoutils.glider.process_pyglider import proc_pyglider_l0
 from metocc import create_csv
-from utilities import natural_sort
+from votoutils.utilities.utilities import natural_sort
 _log = logging.getLogger(__name__)
 logging.basicConfig(filename='/data/log/pyglider_nrt.log',
                     filemode='a',
