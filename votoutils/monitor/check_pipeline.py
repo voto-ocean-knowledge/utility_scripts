@@ -17,6 +17,7 @@ files_collection = (
     ("sailbuoy.log", "Finished processing nrt sailbuoy data", 2),
     ("voto_add_data.log", "nrt mission add complete", 2),
     ("nrt_plots.log", "End plot creation", 2),
+    ("office_sync_to_pipeline.log", "complete", 2),
     ("rsync_nrt.log", "total size is", 2),
     ("rsync_metocc.log", "total size is", 2),
     ("rsync_web.log", "total size is", 2),
@@ -28,6 +29,8 @@ files_collection = (
     ("metadata_tables.log", "End processing", 25),
     ("cherrdap.log", "ERDDAP checks complete", 25),
 )
+
+
 def check_log_file(file, expected_last_line, hours):
     file_loc = f"/data/log/{file}"
     try:

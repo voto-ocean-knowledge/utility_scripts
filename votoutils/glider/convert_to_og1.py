@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import xarray as xr
-from votoutils.utilities.utilities importencode_times_og1, set_best_dtype
-import vocabularies
+from votoutils.utilities.utilities import encode_times_og1, set_best_dtype
+from votoutils.utilities import vocabularies
 import logging
 
 _log = logging.getLogger(__name__)

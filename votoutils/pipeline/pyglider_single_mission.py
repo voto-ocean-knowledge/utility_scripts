@@ -74,7 +74,7 @@ def process(glider, mission):
     add_complete_profiles(pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}"))
     _log.info("Finished add to database")
 
-    from ad2cp_proc import proc_ad2cp_mission, adcp_data_present
+    from votoutils.ad2cp.ad2cp_proc import proc_ad2cp_mission, adcp_data_present
     if adcp_data_present(glider, mission):
         _log.info("Processing ADCP data")
         proc_ad2cp_mission(glider, mission)

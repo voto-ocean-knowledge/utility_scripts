@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 from itertools import chain
-from ad2cp_file_move import adcp_proc_check
+from votoutils.ad2cp.ad2cp_file_move import adcp_proc_check
 import sys 
 import os
 import json

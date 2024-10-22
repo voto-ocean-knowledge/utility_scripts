@@ -8,7 +8,7 @@ base = Path(secrets["data_path"])
 
 
 if __name__ == '__main__':
-    logf = f'/data/log/office_sync_to_aws.log'
+    logf = f'/data/log/office_sync_to_pipeline.log'
     logging.basicConfig(filename=logf,
                         filemode='a',
                         format='%(asctime)s %(levelname)-8s %(message)s',
