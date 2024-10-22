@@ -53,7 +53,7 @@ clean_names = {
     'Chl-a [μg/L]': 'CHLA',
     'Chl-a [ug/l]': 'CHLA',
     'Chl_A [µg/l]': 'CHLA',
-    'BGAPC [ppb]': 'BGAPC', # Blue Green Algae Phycocyanin - this does not exist in https://vocab.nerc.ac.uk/search_nvs/OG1/
+    'BGAPC [ppb]': 'PHYCOCYANIN',
     'sonde_name': 'sonde_name',
     'sonde_number': 'sonde_number',
     'calibration_date': 'calibration_date',
@@ -195,7 +195,7 @@ def read_ctd(ctd_csv, locfile):
     rows = locations[locations.File == fn]
     if rows.empty:
         mailer("ctd-process", f"no location for ctd {ctd_csv} in file {locfile}")
-        return df_base
+        return
     row = rows.iloc[0]
     sep = "/"
     with open(ctd_csv) as file:
@@ -240,7 +240,7 @@ def read_ctd(ctd_csv, locfile):
             df = df.rename(columns={col: clean_names[col]})
     df = df[list(set(list(attrs_dict.keys()) + ["TIME"]).intersection(set(list(df))))]
     df["TIME"] = df.TIME.astype('datetime64[ns]')
-    return df_base
+    return df
 
 
 def load_cnv_file(ctd_csv):
@@ -263,7 +263,7 @@ def load_cnv_file(ctd_csv):
 
     df = df[list(set(list(attrs_dict.keys()) + ["TIME"]).intersection(set(list(df))))]
     df["TIME"] = df.TIME.astype('datetime64[ns]')
-    return df_base
+    return df
 
 
 def filenames_match(locfile, missing_files=[]):
@@ -330,7 +330,7 @@ def main():
         for ctd_csv in csv_files:
             _log.info(f"Start add {ctd_csv}")
             try:
-                casts.append(ctd_csv, locfile)
+                casts.append(read_ctd(ctd_csv, locfile))
             except:
                 _log.error(f"failed with {ctd_csv}")
                 mailer("ctd-process", f"failed to process ctd {csv_files}")
