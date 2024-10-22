@@ -18,6 +18,8 @@ sys.path.append(str(qc_dir))
 from flag_qartod import flag_ioos, ioos_qc
 _log = logging.getLogger(__name__)
 
+
+
 clean_names = {
     "latitude": "LATITUDE",
     "Latitude": "LATITUDE",
@@ -25,24 +27,33 @@ clean_names = {
     'Longitude': 'LONGITUDE',
     'oxygen_concentration': 'DOXY',
     'DO [μmol/L]': 'DOXY',
+    'rawO2 [mV]': 'VOLTAGE_DOXY',
+    'T_iS [°C]':'TEMP_DOXY',
+    'sat [%]': 'OXYSAT',
     'chlorophyll_concentration': 'CHLA',
     'time': 'TIME',
     'depth': 'DEPTH',
     "Press. [dbar]": "pressure",
     "prDM": "pressure",
     "prdM": "pressure",
+    'Press [dbar]': 'pressure',
     "Temp. [℃]": "TEMP",
+    "Temp [°C]": "TEMP",
     "Temp. [deg C]": "TEMP",
     "t090C": "TEMP",
     "tv290C": "TEMP",
     "Salinity": "PSAL",
     "Sal. [ ]": "PSAL",
+    "SALIN [PSU]": "PSAL",
     "Cond. [mS/cm]": "CNDC",
+    'Cond [mS/cm]': "CNDC",
     "c0S/m": "CNDC",
     'Density [kg/m3]': "density",
     'Density [kg/m^3]': "density",
     'Chl-a [μg/L]': 'CHLA',
     'Chl-a [ug/l]': 'CHLA',
+    'Chl_A [µg/l]': 'CHLA',
+    'BGAPC [ppb]': 'BGAPC', # Blue Green Algae Phycocyanin - this does not exist in https://vocab.nerc.ac.uk/search_nvs/OG1/
     'sonde_name': 'sonde_name',
     'sonde_number': 'sonde_number',
     'calibration_date': 'calibration_date',
