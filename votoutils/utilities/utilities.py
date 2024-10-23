@@ -5,6 +5,7 @@ import logging
 import subprocess
 import datetime
 from pathlib import Path
+from votoutils.upload.sync_functions import sync_script_dir
 _log = logging.getLogger(__name__)
 
 
@@ -147,13 +148,7 @@ def sensor_sampling_period(glider, mission):
 def mailer(subject, message, recipient="callum.rollo@voiceoftheocean.org"):
     _log.warning(f"email: {subject}, {message}, {recipient}")
     subject = subject.replace(" ", "-")
-    send_script = None
-    for possible_loc in ["/home/callum/Documents/data-flow/raw-to-nc/votoutils/votoutils/upload/send.sh",
-                         "/home/callum/Documents/data-flow/raw-to-nc/utility_scripts/send.sh",
-                         "/home/spongebob/Documents/utility_scripts/send.sh",]:
-        if Path(possible_loc).exists():
-            send_script = possible_loc
-            break
+    send_script = sync_script_dir / "mailer.sh"
     subprocess.check_call(['/usr/bin/bash', send_script, message, subject, recipient])
 
 

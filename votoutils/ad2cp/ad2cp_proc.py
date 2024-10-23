@@ -7,6 +7,7 @@ import logging
 import subprocess
 from votoutils.utilities.utilities import encode_times, set_best_dtype
 from votoutils.utilities import geocode
+from votoutils.upload.sync_functions import sync_script_dir
 _log = logging.getLogger(__name__)
 
 
@@ -168,7 +169,7 @@ def proc_ad2cp_mission(glider, mission):
     shutil.move(str(proc_dir / "timeseries/mission_timeseries_with_adcp.nc"), nc)
     _log.info(f"processed ADCP for SEA{glider} M{mission}")
     subprocess.check_call(
-        ['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap_adcp.sh", str(glider), str(mission)])
+        ['/usr/bin/bash', sync_script_dir / "send_to_erddap_adcp.sh", str(glider), str(mission)])
     _log.info(f"sent SEA{glider} M{mission} to ERDDAP")
 
 
