@@ -74,7 +74,7 @@ def good_mission(download_mission_path, processed_missions, explained=(), upload
         mailer("mission not processed", msg)
 
         if pld_path.is_dir() and nav_path.is_dir():
-            subprocess.check_call(['/usr/bin/bash', upload_scrip, str(glider), str(mission), mission_path])
+            subprocess.check_call(['/usr/bin/bash', upload_script, str(glider), str(mission), mission_path])
             msg = f"uploaded raw data for {pretty_mission}"
             mailer("new mission uploaded", msg)
 
