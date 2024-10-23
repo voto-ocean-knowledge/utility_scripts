@@ -6,16 +6,8 @@ import logging
 import gsw
 from seabird.cnv import fCNV
 from votoutils.utilities.utilities import mailer
-import pathlib
-import sys
-script_dir = pathlib.Path(__file__).parent.absolute()
-parent_dir = script_dir.parents[0]
-qc_dir = parent_dir / "voto_glider_qc"
-sys.path.append(str(qc_dir))
-# noinspection PyUnresolvedReferences
-from flag_qartod import flag_ioos, ioos_qc
+from votoutils.qc.flag_qartod import flag_ioos, ioos_qc
 _log = logging.getLogger(__name__)
-
 
 
 clean_names = {
