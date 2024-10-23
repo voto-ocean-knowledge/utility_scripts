@@ -71,6 +71,7 @@ def proc(mission_dir, reprocess=False, upload_script='upload_adcp.sh'):
         attrs[key] = val
     data.attrs = attrs
     print(f"writing {fout}")
+    data = data.drop_vars('MatlabTimeStamp')
     data.to_netcdf(fout)
     print("send to pipeline")
     subprocess.check_call(
