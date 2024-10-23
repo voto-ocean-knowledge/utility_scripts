@@ -1,10 +1,9 @@
-import pathlib
 from votoutils.monitor.office_check_glider_files import list_missions, skip_projects, erddap_download, explained_missions, good_mission, adcp_proc_check
 from votoutils.ad2cp.ad2cp_nc_clean import proc
 from votoutils.utilities.utilities import mailer
+from votoutils.upload.sync_functions import sync_script_dir
 import logging
 _log = logging.getLogger(__name__)
-sync_script_dir = pathlib.Path(__file__).parent.absolute()
 
 if __name__ == '__main__':
     logf = f'/data/log/office_sync_to_pipeline.log'
