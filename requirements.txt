@@ -1,0 +1,16 @@
+numpy
+pandas
+matplotlib
+xarray
+ipython
+dateparser
+geopandas
+netcdf4
+gsw
+cfgrib
+dateparser
+pyyaml
+polars>=1.0.0
+seabird
+httpx
+erddapy
