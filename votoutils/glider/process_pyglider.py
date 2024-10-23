@@ -11,7 +11,7 @@ from votoutils.glider.post_process_dataset import post_process
 from votoutils.utilities.utilities import encode_times, set_best_dtype
 from votoutils.fixers.file_operations import clean_nrt_bad_files
 from votoutils.qc.flag_qartod import flagger
-script_dir = pathlib.Path(__file__).parent.parent.absolute()
+script_dir = pathlib.Path(__file__).parent.parent.parent.absolute()
 parent_dir = script_dir.parents[0]
 qc_dir = parent_dir / "voto_glider_qc"
 sys.path.append(str(qc_dir))

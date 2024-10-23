@@ -113,20 +113,18 @@ def geocode_by_dives(ds):
     df_12nm_extend = gp.sjoin(df_12nm_extend, df_glider, predicate='contains')
     df_glider.index.rename("index", inplace=True)
     df_glider["dive_num"] = df_glider.index
-    df_12nm_id = df_12nm[["index_right", "sovereign1"]]
-    df_helcom_id = df_helcom[["index_right", "Name"]]
-    df_12nm_extend_id = df_12nm_extend[["index_right", "sovereign1"]]
-    df_12nm_extend_id = df_12nm_extend_id.rename(columns={"index_right": "index_right_extend",
+    df_12nm_id = df_12nm[["dive_num", "sovereign1"]]
+    df_helcom_id = df_helcom[["dive_num", "Name"]]
+    df_12nm_extend_id = df_12nm_extend[["dive_num", "sovereign1"]]
+    df_12nm_extend_id = df_12nm_extend_id.rename(columns={"dive_num": "dive_num_extend",
                                                           "sovereign1": "sovereign1_extend"})
     # merge the resulting dataframes and check that dives numbers still align
-    df_glider = pd.merge(df_glider, df_12nm_id, left_on="dive_num", right_on="index_right", how="left")
-    df_glider = pd.merge(df_glider, df_helcom_id, left_on="dive_num", right_on="index_right", how="left")
-    df_glider = pd.merge(df_glider, df_12nm_extend_id, left_on="dive_num", right_on="index_right_extend", how="left")
-    assert not (df_glider.dive_num - df_glider.index_right_x).any()
-    assert not (df_glider.dive_num - df_glider.index_right_y).any()
-    assert not (df_glider.dive_num - df_glider.index_right_extend).any()
+    df_glider = pd.merge(df_glider, df_12nm_id, left_on="dive_num", right_on="dive_num", how="left")
+    df_glider = pd.merge(df_glider, df_helcom_id, left_on="dive_num", right_on="dive_num", how="left")
+    df_glider = pd.merge(df_glider, df_12nm_extend_id, left_on="dive_num", right_on="dive_num_extend", how="left")
+    assert not (df_glider.dive_num - df_glider.dive_num_extend).any()
     # clean up dataframe before returning
-    df_glider.drop(["index_right_x", "index_right_y", "index_right_extend"], axis=1, inplace=True)
+    df_glider.drop(["dive_num_extend"], axis=1, inplace=True)
     df_glider.rename(columns={"Name": "basin"}, inplace=True)
     df_glider.loc[df_glider.sovereign1 != "Sweden", "sovereign1"] = "International waters"
     df_glider.loc[df_glider.sovereign1_extend != "Sweden", "sovereign1_extend"] = "International waters"

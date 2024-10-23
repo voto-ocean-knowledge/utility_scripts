@@ -9,3 +9,4 @@ total_datasets.csv
 .ipynb_checkpoints
 votoutils.egg-info/
 votoutils/_version.py
+*.ipynb
