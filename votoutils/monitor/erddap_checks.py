@@ -4,12 +4,7 @@ import datetime
 from erddapy import ERDDAP
 import geopandas as gp
 import pandas as pd
-import pathlib
-import os
 from votoutils.utilities.utilities import mailer
-
-script_dir = pathlib.Path(__file__).parent.absolute()
-os.chdir(script_dir)
 import logging
 
 _log = logging.getLogger(__name__)
@@ -254,7 +249,6 @@ def main():
         server="https://erddap.observations.voiceoftheocean.org/erddap",
         protocol="tabledap",
     )
-    international_waters_check(e, 'nrt_SEA044_M91')
     # Fetch dataset list
     e.response = "csv"
     e.dataset_id = "allDatasets"
