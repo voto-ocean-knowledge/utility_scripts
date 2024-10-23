@@ -26,7 +26,7 @@ def erddap_download():
     return erddap_missions
 
 
-def good_mission(download_mission_path, processed_missions, explained=()):
+def good_mission(download_mission_path, processed_missions, explained=(), upload_script='upload.sh'):
     if "XXX" in str(download_mission_path):
         return
     parts = list(download_mission_path.parts)
@@ -74,7 +74,7 @@ def good_mission(download_mission_path, processed_missions, explained=()):
         mailer("mission not processed", msg)
 
         if pld_path.is_dir() and nav_path.is_dir():
-            subprocess.check_call(['/usr/bin/bash', "upload.sh", str(glider), str(mission), mission_path])
+            subprocess.check_call(['/usr/bin/bash', upload_scrip, str(glider), str(mission), mission_path])
             msg = f"uploaded raw data for {pretty_mission}"
             mailer("new mission uploaded", msg)
 

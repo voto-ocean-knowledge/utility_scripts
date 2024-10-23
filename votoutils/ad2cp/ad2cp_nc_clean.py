@@ -2,13 +2,14 @@ import xarray as xr
 from pathlib import Path
 import subprocess
 from votoutils.monitor.office_check_glider_files import list_missions, skip_projects
+from votoutils.upload.office_sync_to_pipeline import sync_script_dir
 from votoutils.utilities.utilities import mailer
 import logging
 _log = logging.getLogger(__name__)
 explained_issues = [(66, 45)]
 
 
-def proc(mission_dir, reprocess=False):
+def proc(mission_dir, reprocess=False, upload_script=sync_script_dir / 'upload_adcp.sh'):
     _log.info(f"clean ad2cp data for {mission_dir}")
     if "XXX" in str(mission_dir):
         return
@@ -74,7 +75,7 @@ def proc(mission_dir, reprocess=False):
     data.to_netcdf(fout)
     print("send to pipeline")
     subprocess.check_call(
-        ['/usr/bin/bash', "/home/pipeline/utility_scripts/upload_adcp.sh",
+        ['/usr/bin/bash', upload_script,
          str(glider), str(mission), str(fout)])
     msg = f"uploaded ADCP data for {pretty_mission} SEA{glider} M{mission}"
     mailer("uploaded ADCP", msg)
