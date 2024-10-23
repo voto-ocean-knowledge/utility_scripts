@@ -10,12 +10,13 @@ import datetime
 import subprocess
 import shutil
 
-script_dir = pathlib.Path(__file__).parent.absolute()
+script_dir = pathlib.Path(__file__).parent.parent.absolute()
 parent_dir = script_dir.parents[0]
 sys.path.append(str(script_dir))
 os.chdir(script_dir)
 from votoutils.utilities.utilities import natural_sort, match_input_files
 from votoutils.glider.process_pyglider import proc_pyglider_l0
+from votoutils.upload.sync_functions import sync_script_dir
 
 _log = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def process(glider, mission):
 
 
     subprocess.check_call(
-        ['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(glider), str(mission)])
+        ['/usr/bin/bash', sync_script_dir / "send_to_erddap.sh", str(glider), str(mission)])
     _log.info("Sent file to erddap")
 
     remove_proc_files(glider, mission)

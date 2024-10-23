@@ -1,15 +1,8 @@
-import os
-import sys
 import pathlib
 import pandas as pd
 import logging
 import subprocess
-
-script_dir = pathlib.Path(__file__).parent.absolute()
-parent_dir = script_dir.parents[0]
-sys.path.append(str(script_dir))
-os.chdir(script_dir)
-
+from votoutils.upload.sync_functions import sync_script_dir
 _log = logging.getLogger(__name__)
 
 
@@ -30,9 +23,9 @@ if __name__ == '__main__':
         glider, mission, proc = row.glider, row.mission, row.proc_time
         print(f"Will send file {i}/{total}: SEA{glider} M{mission}")
         _log.info(f"Send file {i}/{total}: SEA{glider} M{mission}")
-        subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap.sh", str(glider), str(mission)])
+        subprocess.check_call(['/usr/bin/bash', sync_script_dir / "send_to_erddap.sh", str(glider), str(mission)])
         if pathlib.Path(f"/data/data_l0_pyglider/complete_mission/SEA{glider}/M{mission}/ADCP/adcp.nc").exists():
             _log.info(f"Send adcp file {i}/{total}: SEA{glider} M{mission}")
-            subprocess.check_call(['/usr/bin/bash', "/home/pipeline/utility_scripts/send_to_erddap_adcp.sh", str(glider), str(mission)])
+            subprocess.check_call(['/usr/bin/bash',sync_script_dir / "send_to_erddap_adcp.sh", str(glider), str(mission)])
 
     _log.info(f"Complete send to erddap")
