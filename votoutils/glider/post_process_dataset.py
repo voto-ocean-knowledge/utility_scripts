@@ -1,9 +1,9 @@
 import numpy as np
 import re
-from post_process_optics import betasw_ZHH2009
-import logging
+from votoutils.glider.post_process_optics import betasw_ZHH2009
 from votoutils.utilities.geocode import filter_territorial_data
-from post_process_ctd import salinity_pressure_correction, correct_rbr_lag
+from votoutils.glider.post_process_ctd import salinity_pressure_correction, correct_rbr_lag
+import logging
 _log = logging.getLogger(__name__)
 
 

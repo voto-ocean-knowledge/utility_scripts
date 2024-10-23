@@ -7,7 +7,7 @@ import numpy as np
 import polars as pl
 import xarray as xr
 from votoutils.utilities.geocode import get_seas_merged_nav_nc
-from post_process_dataset import post_process
+from votoutils.glider.post_process_dataset import post_process
 from votoutils.utilities.utilities import encode_times, set_best_dtype
 from votoutils.fixers.file_operations import clean_nrt_bad_files
 from votoutils.qc.flag_qartod import flagger
