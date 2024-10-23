@@ -18,7 +18,7 @@ if __name__ == '__main__':
     processed_missions = erddap_download()
     for mission in mission_list:
         try:
-            proc(mission, reprocess=False)
+            proc(mission, reprocess=False, upload_script=sync_script_dir / 'upload_adcp.sh')
         except:
             mailer("adcp-proc-error", f"failed with {mission}")
         good_mission(mission, processed_missions, explained=explained_missions, upload_script=sync_script_dir / "upload.sh")
