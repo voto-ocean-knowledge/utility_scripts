@@ -7,3 +7,5 @@ message.mp3
 total_datasets.csv
 *.log
 .ipynb_checkpoints
+votoutils.egg-info/
+votoutils/_version.py
